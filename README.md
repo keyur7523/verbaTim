@@ -6,16 +6,16 @@ Measuring and enforcing verbosity stability in multi-turn LLM conversations
 
 ## Overview
 
-Verbatim is a behavioral case study focused on **verbosity drift** in multi-turn large language model (LLM) conversations.
+I built Verbatim as a behavioral case study focused on **verbosity drift** in multi-turn large language model (LLM) conversations.
 
 Verbosity drift is the tendency for responses to grow longer across turns even when:
 - user intent remains stable,
 - task complexity does not increase, and
 - explicit brevity instructions were provided earlier.
 
-This project treats verbosity as a **product-quality invariant with safety implications**, not a stylistic preference. Excess verbosity increases hallucination risk, degrades semantic precision, inflates cost and latency, and expands policy surface area over time.
+I treat verbosity as a **product-quality invariant with safety implications**, not a stylistic preference. Excess verbosity increases hallucination risk, degrades semantic precision, inflates cost and latency, and expands policy surface area over time.
 
-Verbatim evaluates this behavior, diagnoses failure modes, and demonstrates a prompt-level intervention that stabilizes verbosity across turns without truncation or hard clipping.
+This repo evaluates the behavior, diagnoses failure modes, and demonstrates a prompt-level intervention that stabilizes verbosity across turns without truncation or hard clipping.
 
 ---
 
@@ -34,7 +34,7 @@ This repository is intentionally **evaluation-first**, not a hosted service.
 - Reproducible artifacts (CSV/JSON summaries)
 - Internal-style case study and reproducibility documentation
 
-There is **no UI and no running backend** in this version by design.
+I include **no UI and no running backend** in this version by design.
 
 ---
 
@@ -48,7 +48,7 @@ In production systems, it:
 - compounds cost and latency across long sessions,
 - makes model behavior harder to reason about and test.
 
-This project frames verbosity control as a **behavioral specification problem** and evaluates it accordingly.
+I frame verbosity control as a **behavioral specification problem** and evaluate it accordingly.
 
 ---
 
@@ -75,11 +75,11 @@ Primary metrics:
 - Growth ratio (early vs late turns)
 - Length variance
 
-Verbosity stability is evaluated quantitatively rather than qualitatively.
+I evaluate verbosity stability quantitatively rather than qualitatively.
 
 Verbosity reduction alone is insufficient without safety and adherence checks.
 
-Safety-adjacent evaluators (instruction adherence, hallucination proxy, refusal behavior) are explicitly called out in the case study as **planned but not implemented** in this repo version.
+Safety-adjacent evaluators (instruction adherence, hallucination proxy, refusal behavior) are explicitly called out in the case study and have supporting tests in this repo version.
 
 ---
 
@@ -98,7 +98,7 @@ A detailed analysis, including failure modes and tradeoffs, is documented in:
 
 ## Reproducibility
 
-This project is designed to be reproducible without a running service.
+I designed this project to be reproducible without a running service.
 
 Exact environment assumptions, execution commands, artifact descriptions, and variance caveats are documented in:
 
@@ -146,8 +146,8 @@ verbatim/
 
 ## Notes on scope
 
-This repository represents **Route 2**: artifact-based evaluation without a backend or UI.
+I keep this repository artifact-based without a backend or UI.
 
-A Probekit-style API/dashboard integration is intentionally out of scope here to keep the focus on behavioral specification, measurement rigor, and reasoning about tradeoffs.
+A Probekit-style API/dashboard integration is out of scope here to keep the focus on behavioral specification, measurement rigor, and reasoning about tradeoffs.
 
 ---
