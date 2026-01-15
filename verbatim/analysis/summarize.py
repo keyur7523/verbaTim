@@ -35,6 +35,36 @@ def _load_evaluator_results(run_dir: Path) -> list[dict[str, Any]]:
     return data if isinstance(data, list) else []
 
 
+def load_turn_metrics(path: Path) -> list[dict[str, Any]]:
+    if not path.exists():
+        raise ValueError(f"Missing turn metrics file: {path}")
+    data = _load_json(path)
+    if not isinstance(data, list):
+        raise ValueError(f"Unexpected turn metrics format: {path}")
+    return data
+
+
+def compute_growth_ratio_from_turn_metrics(turn_metrics: list[dict], n: int = 3) -> float:
+    ordered = sorted(turn_metrics, key=lambda item: item.get("turn_index", 0))
+    outputs = []
+    for entry in ordered:
+        if "output_tokens" in entry:
+            outputs.append(entry.get("output_tokens"))
+        elif "assistant_output_tokens" in entry:
+            outputs.append(entry.get("assistant_output_tokens"))
+
+    outputs = [val for val in outputs if isinstance(val, (int, float))]
+    if len(outputs) < 2 * n:
+        return 1.0
+
+    early = sum(outputs[:n]) / n
+    late = sum(outputs[-n:]) / n
+
+    if early == 0:
+        return 1.0 if late == 0 else float("inf")
+    return late / early
+
+
 def summarize(artifacts_dir: Path) -> list[dict[str, Any]]:
     rows: dict[str, dict[str, Any]] = {}
     for run_dir in artifacts_dir.iterdir():
@@ -54,6 +84,7 @@ def summarize(artifacts_dir: Path) -> list[dict[str, Any]]:
                 "mean_tokens_per_turn": [],
                 "drift_slope": [],
                 "length_stddev": [],
+                "growth_ratio": [],
                 "instruction_passed": 0,
                 "instruction_total": 0,
                 "hallucination_passed": 0,
@@ -71,6 +102,12 @@ def summarize(artifacts_dir: Path) -> list[dict[str, Any]]:
             value = extracted.get(key)
             if isinstance(value, (int, float)):
                 row[key].append(float(value))
+
+        turn_metrics_path = run_dir / "turn_metrics.json"
+        if turn_metrics_path.exists():
+            turn_metrics = load_turn_metrics(turn_metrics_path)
+            growth_ratio = compute_growth_ratio_from_turn_metrics(turn_metrics, n=3)
+            row["growth_ratio"].append(growth_ratio)
 
         for result in _load_evaluator_results(run_dir):
             name = result.get("evaluator_name")
@@ -108,6 +145,8 @@ def summarize(artifacts_dir: Path) -> list[dict[str, Any]]:
                 if row["drift_slope"] else None,
                 "length_stddev": sum(row["length_stddev"]) / len(row["length_stddev"])
                 if row["length_stddev"] else None,
+                "growth_ratio": sum(row["growth_ratio"]) / len(row["growth_ratio"])
+                if row["growth_ratio"] else None,
                 "instruction_pass_rate": instruction_rate,
                 "hallucination_flag_rate": (1.0 - hallucination_pass_rate) if hallucination_pass_rate is not None else None,
                 "refusal_rate": refusal_rate,
@@ -138,6 +177,7 @@ def main() -> int:
         "mean_tokens",
         "drift_slope",
         "length_stddev",
+        "growth_ratio",
         "instruction_pass_rate",
         "hallucination_flag_rate",
         "refusal_rate",
@@ -151,6 +191,7 @@ def main() -> int:
             _format_float(row["mean_tokens_per_turn"]),
             _format_float(row["drift_slope"]),
             _format_float(row["length_stddev"]),
+            _format_float(row["growth_ratio"]),
             _format_float(row["instruction_pass_rate"]),
             _format_float(row["hallucination_flag_rate"]),
             _format_float(row["refusal_rate"]),
@@ -161,7 +202,7 @@ def main() -> int:
 
     if args.output_csv:
         lines = [
-            "condition,runs,pass_rate,mean_tokens,drift_slope,length_stddev,instruction_pass_rate,hallucination_flag_rate,refusal_rate"
+            "condition,runs,pass_rate,mean_tokens,drift_slope,length_stddev,growth_ratio,instruction_pass_rate,hallucination_flag_rate,refusal_rate"
         ]
         for row in rows:
             lines.append(",".join([
@@ -171,6 +212,7 @@ def main() -> int:
                 _format_float(row["mean_tokens_per_turn"]),
                 _format_float(row["drift_slope"]),
                 _format_float(row["length_stddev"]),
+                _format_float(row["growth_ratio"]),
                 _format_float(row["instruction_pass_rate"]),
                 _format_float(row["hallucination_flag_rate"]),
                 _format_float(row["refusal_rate"]),
@@ -198,6 +240,7 @@ def main() -> int:
                 f"<td>{_format_float(row['mean_tokens_per_turn'])}</td>"
                 f"<td>{_format_float(row['drift_slope'])}</td>"
                 f"<td>{_format_float(row['length_stddev'])}</td>"
+                f"<td>{_format_float(row['growth_ratio'])}</td>"
                 f"<td>{_format_float(row['instruction_pass_rate'])}</td>"
                 f"<td>{_format_float(row['hallucination_flag_rate'])}</td>"
                 f"<td>{_format_float(row['refusal_rate'])}</td>"
@@ -232,6 +275,7 @@ def main() -> int:
             "<th>mean_tokens</th>",
             "<th>drift_slope</th>",
             "<th>length_stddev</th>",
+            "<th>growth_ratio</th>",
             "<th>instruction_pass_rate</th>",
             "<th>hallucination_flag_rate</th>",
             "<th>refusal_rate</th>",
@@ -274,6 +318,11 @@ def main() -> int:
                             if row["pass_rate"] is not None and baseline["pass_rate"] is not None
                             else None
                         ),
+                        "growth_ratio_delta": (
+                            row["growth_ratio"] - baseline["growth_ratio"]
+                            if row["growth_ratio"] is not None and baseline["growth_ratio"] is not None
+                            else None
+                        ),
                         "instruction_pass_rate_delta": (
                             row["instruction_pass_rate"] - baseline["instruction_pass_rate"]
                             if row["instruction_pass_rate"] is not None and baseline["instruction_pass_rate"] is not None
@@ -290,6 +339,8 @@ def main() -> int:
                             else None
                         ),
                     },
+                    "baseline_growth_ratio": baseline["growth_ratio"],
+                    "verbatim_growth_ratio": row["growth_ratio"] if row["condition"] == "verbatim" else None,
                 })
             if args.output_compare:
                 Path(args.output_compare).write_text(json.dumps(deltas, indent=2), encoding="utf-8")

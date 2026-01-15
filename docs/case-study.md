@@ -59,15 +59,16 @@ Truncation and hard clipping were avoided to preserve coherence and to diagnose 
 ### Results (Summary)
 | Condition | Mean tokens/turn | Drift slope (tokens/turn) | Growth ratio | Pass rate (verbosity) |
 |---|---:|---:|---:|---:|
-| baseline | 42.559 | -6.309 | TODO: fill from artifacts (growth ratio) | 0.294 |
-| naive | 27.872 | -2.500 | TODO: fill from artifacts (growth ratio) | 0.345 |
-| budgeted | 32.037 | -0.488 | TODO: fill from artifacts (growth ratio) | 0.380 |
-| verbatim | 71.667 | -0.764 | TODO: fill from artifacts (growth ratio) | 0.455 |
+| baseline | 42.559 | -6.309 | 0.727 | 0.294 |
+| naive | 27.872 | -2.500 | 0.835 | 0.345 |
+| budgeted | 32.037 | -0.488 | 0.942 | 0.380 |
+| verbatim | 71.667 | -0.764 | 0.945 | 0.455 |
 
 ### Deltas (baseline → verbatim)
 - Drift slope delta: 5.544969267574531
 - Mean tokens/turn delta: 29.107676900584792
 - Pass rate delta: 0.160427807486631
+- Growth ratio delta: 0.21821381471108503
 
 ## 8) Tradeoffs and Failure Cases
 Observed or expected tradeoffs:
