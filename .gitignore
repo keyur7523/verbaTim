@@ -1,0 +1,12 @@
+# Python venvs
+venv/
+.venv/
+backend/venv/
+
+# Python caches
+__pycache__/
+*.pyc
+
+# Artifacts
+artifacts/
+*.log

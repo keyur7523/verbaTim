@@ -1,0 +1,84 @@
+version: 1
+notes: >-
+  Fixed intent templates for 12-turn conversations. No user request for more detail.
+
+intents:
+  - id: concept_explanation
+    description: Explain a concept with stable intent across turns.
+    initial_user_prompt: "Explain what a hash table is and when to use it."
+    followups:
+      - "Summarize the key benefit in one sentence."
+      - "Give one practical example in everyday apps."
+      - "Name one tradeoff compared to a balanced tree."
+      - "List two common pitfalls." 
+      - "State the average time complexity for lookup."
+      - "What is a good alternative when memory is tight?"
+      - "Provide one short analogy."
+      - "Describe when I should not use it."
+      - "Give one reason it can be faster than a list."
+      - "Provide a one-line recap."
+      - "Answer in a short bullet list." 
+
+  - id: option_comparison
+    description: Compare two options without increasing detail.
+    initial_user_prompt: "Compare REST and GraphQL for a small internal API."
+    followups:
+      - "Give the main difference in one sentence."
+      - "Which is simpler to cache and why?"
+      - "Name one downside of GraphQL for a small team."
+      - "Name one downside of REST for changing requirements."
+      - "Which is easier to secure by default?"
+      - "Give a short recommendation for a 2-person team."
+      - "Provide one thing they have in common."
+      - "State which has clearer tooling out of the box."
+      - "Give a one-line summary."
+      - "Answer in two bullets."
+      - "Provide a final short recap." 
+
+  - id: step_by_step_planning
+    description: Planning task with stable scope.
+    initial_user_prompt: "Plan a 1-day migration from SVN to Git for a small repo."
+    followups:
+      - "List the top 3 risks."
+      - "Give a short checklist."
+      - "State one rollback option."
+      - "Name one prerequisite."
+      - "What is the fastest validation step?"
+      - "Give a one-line timeline."
+      - "Provide two tools you might use."
+      - "State who should approve the final cutover."
+      - "Give one short communication tip."
+      - "Provide a final recap." 
+      - "Answer in short bullets only." 
+
+  - id: debugging_analysis
+    description: Debugging analysis with short prompts.
+    initial_user_prompt: "A Python script hangs when reading a large file. Give likely causes."
+    followups:
+      - "Suggest one quick diagnostic step."
+      - "Name one common I/O mistake."
+      - "Provide a short fix idea."
+      - "Give one reason buffering matters."
+      - "State one possible OS-level issue."
+      - "Give a one-line summary."
+      - "List two safe mitigation steps."
+      - "Provide a short next step." 
+      - "Answer in two bullets."
+      - "Final recap in one sentence."
+      - "Provide one caution." 
+
+  - id: summarization
+    description: Summarization task across turns.
+    initial_user_prompt: "Summarize the benefits of code review for a small team."
+    followups:
+      - "Give a one-sentence summary."
+      - "List two concrete benefits."
+      - "Name one cultural benefit."
+      - "State one risk if reviews are skipped."
+      - "Provide one metric to track."
+      - "Give a short concluding line."
+      - "Answer in bullets only."
+      - "Provide a final one-line recap."
+      - "Offer one caveat."
+      - "Restate in 10 words."
+      - "Provide a final short summary." 
