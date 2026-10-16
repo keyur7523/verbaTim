@@ -7,6 +7,10 @@ backend/venv/
 __pycache__/
 *.pyc
 
-# Artifacts
-artifacts/
+# Artifacts: only real-model runs under artifacts/ are committed.
+# Mock-backend and failed runs are kept locally, out of git.
+artifacts_excluded/
+
+# Local databases and logs
+*.db
 *.log

@@ -5,8 +5,10 @@ import re
 def test_case_study_has_results_table_and_deltas_or_todos():
     content = Path("docs/case-study.md").read_text(encoding="utf-8")
     assert "### Results (Summary)" in content
-    assert "| Condition | Mean tokens/turn | Drift slope (tokens/turn) | Growth ratio | Pass rate (verbosity) |" in content
+    assert "| Condition | n | Pass rate (verbosity) |" in content
     assert "### Deltas (baseline → verbatim)" in content
+    # Results stay marked as withdrawn until the balanced rerun replaces them.
+    assert "Withdrawn pending rerun" in content
 
     has_digit = re.search(r"\d", content) is not None
     has_todo = "TODO:" in content

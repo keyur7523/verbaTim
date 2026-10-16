@@ -1,0 +1,98 @@
+[
+  {
+    "turn_index": 0,
+    "input_tokens": 31,
+    "output_tokens": 512,
+    "latency_ms": 10682,
+    "cost_usd": 0.007773,
+    "fallback_used": false
+  },
+  {
+    "turn_index": 1,
+    "input_tokens": 559,
+    "output_tokens": 33,
+    "latency_ms": 2368,
+    "cost_usd": 0.002172,
+    "fallback_used": false
+  },
+  {
+    "turn_index": 2,
+    "input_tokens": 603,
+    "output_tokens": 32,
+    "latency_ms": 2578,
+    "cost_usd": 0.002289,
+    "fallback_used": false
+  },
+  {
+    "turn_index": 3,
+    "input_tokens": 649,
+    "output_tokens": 33,
+    "latency_ms": 2657,
+    "cost_usd": 0.002442,
+    "fallback_used": false
+  },
+  {
+    "turn_index": 4,
+    "input_tokens": 692,
+    "output_tokens": 64,
+    "latency_ms": 3337,
+    "cost_usd": 0.003036,
+    "fallback_used": false
+  },
+  {
+    "turn_index": 5,
+    "input_tokens": 767,
+    "output_tokens": 15,
+    "latency_ms": 1988,
+    "cost_usd": 0.002526,
+    "fallback_used": false
+  },
+  {
+    "turn_index": 6,
+    "input_tokens": 795,
+    "output_tokens": 42,
+    "latency_ms": 3044,
+    "cost_usd": 0.003015,
+    "fallback_used": false
+  },
+  {
+    "turn_index": 7,
+    "input_tokens": 847,
+    "output_tokens": 43,
+    "latency_ms": 2779,
+    "cost_usd": 0.003186,
+    "fallback_used": false
+  },
+  {
+    "turn_index": 8,
+    "input_tokens": 902,
+    "output_tokens": 52,
+    "latency_ms": 3010,
+    "cost_usd": 0.003486,
+    "fallback_used": false
+  },
+  {
+    "turn_index": 9,
+    "input_tokens": 968,
+    "output_tokens": 34,
+    "latency_ms": 4069,
+    "cost_usd": 0.003414,
+    "fallback_used": false
+  },
+  {
+    "turn_index": 10,
+    "input_tokens": 1013,
+    "output_tokens": 38,
+    "latency_ms": 2594,
+    "cost_usd": 0.003609,
+    "fallback_used": false
+  },
+  {
+    "turn_index": 11,
+    "input_tokens": 1061,
+    "output_tokens": 79,
+    "latency_ms": 3041,
+    "cost_usd": 0.004368,
+    "fallback_used": false
+  }
+]

@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Explain what a hash table is and when to use it.",
+    "assistant_text": "A **hash table** (also called a hash map) is a data structure that stores key-value pairs and provides very fast average-case lookup, insertion, and deletion operations.\n\n## How Hash Tables Work\n\nHash tables use a **hash function** to convert keys into array indices:\n1. The hash function takes a key and produces an integer (hash code)\n2. This integer is mapped to an index in an underlying array\n3. The value is stored at that array position\n\n```\nKey \u2192 Hash Function \u2192 Index \u2192 Value stored at array[index]\n```\n\n## Key Characteristics\n\n- **Average Time Complexity**: O(1) for lookup, insert, and delete\n- **Worst Case**: O(n) when many collisions occur\n- **Space Complexity**: O(n)\n\n## Collision Handling\n\nWhen different keys hash to the same index, common solutions include:\n- **Chaining**: Store multiple items in a linked list at each index\n- **Open Addressing**: Find the next available slot using probing\n\n## When to Use Hash Tables\n\n### \u2705 **Ideal Use Cases:**\n\n1. **Fast lookups**: When you need to quickly find values by key\n2. **Caching**: Storing computed results for quick retrieval\n3. **Counting/frequency tracking**: Counting occurrences of items\n4. **Database indexing**: Quick record retrieval\n5. **Implementing sets**: Checking membership efficiently\n6. **Memoization**: Storing function results to avoid recomputation\n\n### \u274c **When NOT to use:**\n\n1. **Ordered data**: Hash tables don't maintain insertion or sorted order\n2. **Small datasets**: Overhead may not be worth it\n3. **Memory-constrained environments**: Hash tables can have significant memory overhead\n4. **When you need worst-case guarantees**: Hash tables can degrade to O(n) performance\n\n## Example Use Case\n\n```python\n# Counting word frequency\nword_count = {}\nfor word in text.split():\n    word_count[word] = word_count.get(word, 0) + 1\n```\n\nHash tables are fundamental to many algorithms and are built into most programming languages (Python's `dict`, Java's `HashMap`, JavaScript's `Object`, etc.)."
+  },
+  {
+    "turn_index": 1,
+    "user_text": "Summarize the key benefit in one sentence.",
+    "assistant_text": "Hash tables provide **O(1) average-case lookup time**, making them ideal for fast key-based data retrieval."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give one practical example in everyday apps.",
+    "assistant_text": "**Web browser caching** - browsers use hash tables to quickly check if a webpage, image, or resource is already stored locally by using the URL as the key, avoiding slow re-downloads."
+  },
+  {
+    "turn_index": 3,
+    "user_text": "Name one tradeoff compared to a balanced tree.",
+    "assistant_text": "Hash tables **lose ordering** - unlike balanced trees, you can't efficiently iterate through data in sorted order or find the next/previous element."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "List two common pitfalls.",
+    "assistant_text": "1. **Poor hash function choice** - leads to excessive collisions and degrades performance from O(1) to O(n)\n\n2. **Hash table resizing overhead** - when the table becomes too full, it must resize and rehash all elements, causing temporary performance spikes"
+  },
+  {
+    "turn_index": 5,
+    "user_text": "State the average time complexity for lookup.",
+    "assistant_text": "**O(1)** - constant time on average."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "What is a good alternative when memory is tight?",
+    "assistant_text": "**Arrays with binary search** - use O(n) space instead of hash table overhead, with O(log n) lookup time, which is often acceptable when memory is more critical than speed."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide one short analogy.",
+    "assistant_text": "A hash table is like a **library card catalog** - you use the book title (key) to quickly find the exact drawer and card (hash function + index) that tells you where the book is located, instead of searching through every shelf."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "Describe when I should not use it.",
+    "assistant_text": "**Don't use hash tables when you need data in sorted order** - if you frequently need to process items from smallest to largest, iterate in alphabetical order, or find ranges of values, use a balanced tree or sorted array instead."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one reason it can be faster than a list.",
+    "assistant_text": "**Direct access vs. sequential search** - hash tables jump directly to the data location using the key, while lists must check each element one by one until they find a match."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a one-line recap.",
+    "assistant_text": "Hash tables trade memory and ordering for lightning-fast O(1) key-based lookups, making them perfect for caches, databases, and any scenario requiring instant data retrieval."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in a short bullet list.",
+    "assistant_text": "\u2022 **What**: Data structure storing key-value pairs with fast access\n\u2022 **Speed**: O(1) average lookup, insert, delete\n\u2022 **Best for**: Caching, counting, fast lookups, databases\n\u2022 **Avoid when**: Need sorted data or memory is very limited\n\u2022 **Tradeoff**: Speed vs. memory overhead and no ordering"
+  }
+]

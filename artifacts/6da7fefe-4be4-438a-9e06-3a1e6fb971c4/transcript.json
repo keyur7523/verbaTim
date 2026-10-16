@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 4,
+    "user_text": "List two common pitfalls.",
+    "assistant_text": "Two common hash table pitfalls:\n\n1. **Hash collisions** - Multiple keys mapping to the same index, degrading performance from O(1) to O(n) in worst case\n2. **Poor hash function choice** - Uneven distribution of keys leads to clustering and frequent collisions, reducing efficiency"
+  },
+  {
+    "turn_index": 3,
+    "user_text": "Name one tradeoff compared to a balanced tree.",
+    "assistant_text": "Hash tables lose ordering (can't iterate keys in sorted order) while balanced trees maintain sorted order but have slower O(log n) operations instead of O(1)."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide one short analogy.",
+    "assistant_text": "A hash table is like a library with a card catalog system - instead of searching through every book, you use the catalog (hash function) to instantly find the exact shelf location where your book (value) is stored using its title (key)."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "Describe when I should not use it.",
+    "assistant_text": "Don't use hash tables when you need:\n- **Sorted/ordered data** - can't iterate keys in order\n- **Range queries** - finding all keys between two values\n- **Memory-constrained environments** - high overhead from buckets/collision handling\n- **Predictable worst-case performance** - collisions can degrade to O(n)\n\nUse arrays, trees, or other structures instead for these scenarios."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one reason it can be faster than a list.",
+    "assistant_text": "Hash tables can be faster than lists because they provide **direct access** to elements using the key - you instantly jump to the correct location via hashing instead of scanning through potentially thousands of list elements sequentially (O(1) vs O(n) lookup time)."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a one-line recap.",
+    "assistant_text": "Hash tables trade memory and ordering for lightning-fast O(1) key-based lookups, making them ideal for caching, indexing, and frequent data retrieval."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in a short bullet list.",
+    "assistant_text": "\u2022 **What:** Key-value data structure using hash function for direct access\n\u2022 **Speed:** Average O(1) lookup, insert, delete operations  \n\u2022 **Best for:** Fast lookups, caching, counting, duplicate removal\n\u2022 **Tradeoffs:** Extra memory, no ordering, collision risks\n\u2022 **Avoid when:** Need sorted data or tight memory constraints"
+  },
+  {
+    "turn_index": 0,
+    "user_text": "Explain what a hash table is and when to use it.",
+    "assistant_text": "A hash table (or hash map) is a data structure that stores key-value pairs using a hash function to map keys to array indices. It provides average O(1) time complexity for insertions, deletions, and lookups.\n\n**When to use hash tables:**\n- Fast data retrieval by key\n- Counting frequencies\n- Caching/memoization\n- Database indexing\n- Implementing sets\n- Removing duplicates\n\n**Advantages:** Very fast access, flexible keys\n**Disadvantages:** No ordering, potential hash collisions, extra memory overhead\n\nPerfect for scenarios requiring frequent lookups with known keys."
+  },
+  {
+    "turn_index": 1,
+    "user_text": "Summarize the key benefit in one sentence.",
+    "assistant_text": "Hash tables provide extremely fast average O(1) lookup, insertion, and deletion operations by using a hash function to directly map keys to their storage locations."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give one practical example in everyday apps.",
+    "assistant_text": "Dictionary/autocomplete features in search engines and text editors use hash tables to instantly look up word suggestions as you type, providing real-time results by mapping partial words to their completions."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "State the average time complexity for lookup.",
+    "assistant_text": "The average time complexity for lookup in a hash table is **O(1)** - constant time."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "What is a good alternative when memory is tight?",
+    "assistant_text": "When memory is tight, a **balanced binary search tree** (like AVL or Red-Black tree) is a good alternative - it uses less memory overhead and provides O(log n) operations without needing extra space for hash table buckets and collision handling."
+  }
+]

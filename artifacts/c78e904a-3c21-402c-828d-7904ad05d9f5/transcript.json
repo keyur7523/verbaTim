@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 3,
+    "user_text": "Name one tradeoff compared to a balanced tree.",
+    "assistant_text": "Hash tables lose key ordering - you can't efficiently traverse data in sorted order like you can with balanced trees."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "State the average time complexity for lookup.",
+    "assistant_text": "O(1) - constant time complexity for average case lookup."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "What is a good alternative when memory is tight?",
+    "assistant_text": "A balanced binary search tree (like AVL or Red-Black tree) - it uses less memory overhead and still provides O(log n) lookup time."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide one short analogy.",
+    "assistant_text": "A hash table is like a library's card catalog - you use the book title (key) to quickly find the exact shelf location (value) without searching every aisle."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "Describe when I should not use it.",
+    "assistant_text": "Don't use hash tables when you need:\n- Sorted/ordered data traversal\n- Range queries (find all keys between X and Y)\n- Very tight memory constraints\n- Predictable worst-case performance (hash collisions can cause O(n) lookups)\n\nUse arrays, trees, or lists instead."
+  },
+  {
+    "turn_index": 0,
+    "user_text": "Explain what a hash table is and when to use it.",
+    "assistant_text": "A hash table is a data structure that stores key-value pairs using a hash function to map keys to array indices for fast lookups.\n\n**When to use:**\n- Need O(1) average lookup/insert/delete time\n- Implementing caches, databases, or dictionaries\n- Counting frequencies\n- Detecting duplicates\n- When you need fast data retrieval by key\n\n**Trade-offs:** Uses more memory, potential hash collisions."
+  },
+  {
+    "turn_index": 1,
+    "user_text": "Summarize the key benefit in one sentence.",
+    "assistant_text": "Hash tables provide near-constant O(1) time complexity for lookups, insertions, and deletions, making data retrieval extremely fast."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give one practical example in everyday apps.",
+    "assistant_text": "Web browsers use hash tables to cache website data - when you revisit a site, the browser quickly looks up cached images and files by URL instead of re-downloading everything."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "List two common pitfalls.",
+    "assistant_text": "1. **Hash collisions** - Multiple keys mapping to the same index, degrading performance\n2. **Poor hash function** - Uneven distribution causing clustering and slower lookups"
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one reason it can be faster than a list.",
+    "assistant_text": "Hash tables provide direct access to elements via key lookup, while lists require sequential searching through elements until the target is found - O(1) vs O(n)."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a one-line recap.",
+    "assistant_text": "Hash tables trade memory for speed, offering O(1) lookups by mapping keys to array positions using hash functions."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in a short bullet list.",
+    "assistant_text": "\u2022 **What:** Key-value storage using hash functions\n\u2022 **Speed:** O(1) average lookup/insert/delete\n\u2022 **Use when:** Need fast data retrieval by key\n\u2022 **Avoid when:** Need sorted data or tight memory\n\u2022 **Trade-off:** Memory usage for speed"
+  }
+]

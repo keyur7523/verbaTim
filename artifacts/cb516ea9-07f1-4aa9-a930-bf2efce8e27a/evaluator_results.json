@@ -1,0 +1,30 @@
+[
+  {
+    "id": "e6e90773-6b6d-4033-b47d-3d00ea44f818",
+    "evaluator_name": "verbosity_stability",
+    "passed": false,
+    "score": 0.75,
+    "details": {
+      "metrics": {
+        "mean_tokens_per_turn": 76.083,
+        "drift_slope": -13.934,
+        "length_stddev": 96.729,
+        "growth_ratio": 0.25
+      },
+      "fallback_rate": 0.0,
+      "thresholds": {
+        "max_drift_slope": 3.0,
+        "max_growth_ratio": 1.2,
+        "max_stddev_ratio": 0.35,
+        "max_fallback_rate": 0.15
+      },
+      "checks": {
+        "drift_slope": true,
+        "growth_ratio": true,
+        "length_stddev": false,
+        "fallback_rate": true
+      }
+    },
+    "reasoning": "One or more verbosity thresholds failed"
+  }
+]

@@ -1,14 +1,32 @@
-"""Summarize Verbatim run metrics by condition."""
+"""Summarize Verbatim run metrics by (model, condition).
+
+Only completed, evaluated, real-model runs are aggregated by default. Failed
+runs, mock-backend runs (model null or "mock-echo"), and runs without a
+verbosity evaluation are excluded and counted by reason.
+"""
 from __future__ import annotations
 
 import argparse
 import json
+import math
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
 
-def _load_json(path: Path) -> dict[str, Any]:
+MOCK_MODELS = {None, "", "mock-echo"}
+METRIC_KEYS = ("mean_tokens_per_turn", "drift_slope", "length_stddev", "growth_ratio")
+
+
+def _load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _model_id(payload: dict[str, Any]) -> str | None:
+    model = payload.get("model")
+    if isinstance(model, dict):
+        model = model.get("model_id")
+    return model or None
 
 
 def _extract_metrics(payload: dict[str, Any]) -> dict[str, float | None]:
@@ -65,35 +83,63 @@ def compute_growth_ratio_from_turn_metrics(turn_metrics: list[dict], n: int = 3)
     return late / early
 
 
-def summarize(artifacts_dir: Path) -> list[dict[str, Any]]:
-    rows: dict[str, dict[str, Any]] = {}
-    for run_dir in artifacts_dir.iterdir():
+def exclusion_reason(payload: dict[str, Any], include_mock: bool = False) -> str | None:
+    """Return why a run must be excluded from aggregation, or None to keep it."""
+    if payload.get("status") != "completed":
+        return "failed"
+    if not include_mock and _model_id(payload) in MOCK_MODELS:
+        return "mock"
+    if payload.get("passed") is None or not any(
+        isinstance(v, (int, float)) for v in _extract_metrics(payload).values()
+    ):
+        return "no_evaluation"
+    return None
+
+
+def _mean_sd(values: list[float]) -> tuple[float | None, float | None]:
+    if not values:
+        return None, None
+    mean = sum(values) / len(values)
+    if len(values) < 2:
+        return mean, None
+    variance = sum((v - mean) ** 2 for v in values) / (len(values) - 1)
+    return mean, math.sqrt(variance)
+
+
+def summarize(artifacts_dir: Path, include_mock: bool = False) -> tuple[list[dict[str, Any]], Counter]:
+    rows: dict[tuple[str, str], dict[str, Any]] = {}
+    excluded: Counter = Counter()
+
+    for run_dir in sorted(artifacts_dir.iterdir()):
         if not run_dir.is_dir():
             continue
         metrics_path = run_dir / "aggregate_metrics.json"
         if not metrics_path.exists():
             continue
         payload = _load_json(metrics_path)
+
+        reason = exclusion_reason(payload, include_mock=include_mock)
+        if reason:
+            excluded[reason] += 1
+            continue
+
+        model = _model_id(payload) or "mock-echo"
         condition = payload.get("condition", "unknown")
         row = rows.setdefault(
-            condition,
+            (model, condition),
             {
+                "model": model,
                 "condition": condition,
-                "count": 0,
+                "n": 0,
                 "passed": 0,
-                "mean_tokens_per_turn": [],
-                "drift_slope": [],
-                "length_stddev": [],
-                "growth_ratio": [],
-                "instruction_passed": 0,
-                "instruction_total": 0,
-                "hallucination_passed": 0,
-                "hallucination_total": 0,
-                "refusal_detected": 0,
-                "refusal_total": 0,
+                **{key: [] for key in METRIC_KEYS},
+                "unsupported_claim_flagged": 0,
+                "unsupported_claim_total": 0,
+                "refusal_keyword_flagged": 0,
+                "refusal_keyword_total": 0,
             },
         )
-        row["count"] += 1
+        row["n"] += 1
         if payload.get("passed") is True:
             row["passed"] += 1
 
@@ -106,60 +152,162 @@ def summarize(artifacts_dir: Path) -> list[dict[str, Any]]:
         turn_metrics_path = run_dir / "turn_metrics.json"
         if turn_metrics_path.exists():
             turn_metrics = load_turn_metrics(turn_metrics_path)
-            growth_ratio = compute_growth_ratio_from_turn_metrics(turn_metrics, n=3)
-            row["growth_ratio"].append(growth_ratio)
+            row["growth_ratio"].append(compute_growth_ratio_from_turn_metrics(turn_metrics, n=3))
 
+        # instruction_adherence is not reported: no intent defines an
+        # instruction_spec yet, so it passes unconditionally (audit V12).
         for result in _load_evaluator_results(run_dir):
             name = result.get("evaluator_name")
             passed = result.get("passed")
-            if name == "instruction_adherence":
-                row["instruction_total"] += 1
-                if passed:
-                    row["instruction_passed"] += 1
-            elif name == "hallucination_proxy":
-                row["hallucination_total"] += 1
-                if passed:
-                    row["hallucination_passed"] += 1
-            elif name == "refusal_proxy":
-                row["refusal_total"] += 1
+            if name == "hallucination_proxy":
+                row["unsupported_claim_total"] += 1
                 if not passed:
-                    row["refusal_detected"] += 1
+                    row["unsupported_claim_flagged"] += 1
+            elif name == "refusal_proxy":
+                row["refusal_keyword_total"] += 1
+                if not passed:
+                    row["refusal_keyword_flagged"] += 1
 
     output = []
-    for condition, row in rows.items():
-        count = row["count"] or 1
-        passed = row["passed"]
-        instruction_rate = (row["instruction_passed"] / row["instruction_total"]) if row["instruction_total"] else None
-        hallucination_pass_rate = (
-            row["hallucination_passed"] / row["hallucination_total"]
-        ) if row["hallucination_total"] else None
-        refusal_rate = (row["refusal_detected"] / row["refusal_total"]) if row["refusal_total"] else None
-        output.append(
-            {
-                "condition": condition,
-                "runs": row["count"],
-                "pass_rate": (passed / row["count"]) if row["count"] else 0.0,
-                "mean_tokens_per_turn": sum(row["mean_tokens_per_turn"]) / len(row["mean_tokens_per_turn"])
-                if row["mean_tokens_per_turn"] else None,
-                "drift_slope": sum(row["drift_slope"]) / len(row["drift_slope"])
-                if row["drift_slope"] else None,
-                "length_stddev": sum(row["length_stddev"]) / len(row["length_stddev"])
-                if row["length_stddev"] else None,
-                "growth_ratio": sum(row["growth_ratio"]) / len(row["growth_ratio"])
-                if row["growth_ratio"] else None,
-                "instruction_pass_rate": instruction_rate,
-                "hallucination_flag_rate": (1.0 - hallucination_pass_rate) if hallucination_pass_rate is not None else None,
-                "refusal_rate": refusal_rate,
-            }
+    for row in rows.values():
+        out: dict[str, Any] = {
+            "model": row["model"],
+            "condition": row["condition"],
+            "n": row["n"],
+            "passed": row["passed"],
+            "pass_rate": row["passed"] / row["n"],
+        }
+        for key in METRIC_KEYS:
+            mean, sd = _mean_sd(row[key])
+            out[key] = mean
+            out[f"{key}_sd"] = sd
+        out["unsupported_claim_proxy_rate"] = (
+            row["unsupported_claim_flagged"] / row["unsupported_claim_total"]
+            if row["unsupported_claim_total"] else None
         )
+        out["refusal_keyword_proxy_rate"] = (
+            row["refusal_keyword_flagged"] / row["refusal_keyword_total"]
+            if row["refusal_keyword_total"] else None
+        )
+        output.append(out)
 
-    output.sort(key=lambda item: item["condition"])
-    return output
+    output.sort(key=lambda item: (item["model"], item["condition"]))
+    return output, excluded
+
+
+CSV_HEADER = [
+    "model",
+    "condition",
+    "n",
+    "passed",
+    "pass_rate",
+    "mean_tokens",
+    "mean_tokens_sd",
+    "drift_slope",
+    "drift_slope_sd",
+    "length_stddev",
+    "length_stddev_sd",
+    "growth_ratio",
+    "growth_ratio_sd",
+    "unsupported_claim_proxy_rate",
+    "refusal_keyword_proxy_rate",
+]
+
+
+def _row_cells(row: dict[str, Any]) -> list[str]:
+    return [
+        row["model"],
+        row["condition"],
+        str(row["n"]),
+        str(row["passed"]),
+        _format_float(row["pass_rate"]),
+        _format_float(row["mean_tokens_per_turn"]),
+        _format_float(row["mean_tokens_per_turn_sd"]),
+        _format_float(row["drift_slope"]),
+        _format_float(row["drift_slope_sd"]),
+        _format_float(row["length_stddev"]),
+        _format_float(row["length_stddev_sd"]),
+        _format_float(row["growth_ratio"]),
+        _format_float(row["growth_ratio_sd"]),
+        _format_float(row["unsupported_claim_proxy_rate"]),
+        _format_float(row["refusal_keyword_proxy_rate"]),
+    ]
+
+
+def _format_excluded(excluded: Counter) -> str:
+    if not excluded:
+        return "excluded: none"
+    parts = [f"{count} {reason}" for reason, count in sorted(excluded.items(), key=lambda kv: (-kv[1], kv[0]))]
+    return "excluded: " + ", ".join(parts)
+
+
+def _delta(row: dict[str, Any], baseline: dict[str, Any], key: str) -> float | None:
+    if row[key] is None or baseline[key] is None:
+        return None
+    return row[key] - baseline[key]
+
+
+def compute_deltas(rows: list[dict[str, Any]], baseline_condition: str) -> list[dict[str, Any]]:
+    """Deltas against the baseline condition, computed within each model only."""
+    deltas = []
+    for baseline in (r for r in rows if r["condition"] == baseline_condition):
+        for row in rows:
+            if row["model"] != baseline["model"] or row["condition"] == baseline_condition:
+                continue
+            deltas.append({
+                "model": row["model"],
+                "baseline": baseline_condition,
+                "candidate": row["condition"],
+                "n_baseline": baseline["n"],
+                "n_candidate": row["n"],
+                "deltas": {
+                    "mean_tokens_delta": _delta(row, baseline, "mean_tokens_per_turn"),
+                    "drift_slope_delta": _delta(row, baseline, "drift_slope"),
+                    "pass_rate_delta": _delta(row, baseline, "pass_rate"),
+                    "growth_ratio_delta": _delta(row, baseline, "growth_ratio"),
+                },
+            })
+    return deltas
+
+
+def _render_html(rows: list[dict[str, Any]], excluded: Counter) -> str:
+    html_rows = [
+        "<tr>" + "".join(f"<td>{cell}</td>" for cell in _row_cells(row)) + "</tr>"
+        for row in rows
+    ]
+    return "\n".join([
+        "<!doctype html>",
+        "<html>",
+        "<head>",
+        "<meta charset='utf-8'/>",
+        "<title>Verbatim Summary</title>",
+        "<style>",
+        "body { font-family: Arial, sans-serif; padding: 16px; }",
+        "table { border-collapse: collapse; width: 100%; }",
+        "th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }",
+        "th { background: #f3f3f3; }",
+        "</style>",
+        "</head>",
+        "<body>",
+        "<h1>Verbatim Summary</h1>",
+        f"<p>{_format_excluded(excluded)}</p>",
+        "<table>",
+        "<thead>",
+        "<tr>" + "".join(f"<th>{name}</th>" for name in CSV_HEADER) + "</tr>",
+        "</thead>",
+        "<tbody>",
+        *html_rows,
+        "</tbody>",
+        "</table>",
+        "</body>",
+        "</html>",
+    ])
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Summarize Verbatim artifacts by condition.")
+    parser = argparse.ArgumentParser(description="Summarize Verbatim artifacts by model and condition.")
     parser.add_argument("--artifacts-dir", default="artifacts", help="Directory containing run artifacts")
+    parser.add_argument("--include-mock", action="store_true", help="Include mock-backend runs (model null or mock-echo)")
     parser.add_argument("--output", default="", help="Optional output JSON path")
     parser.add_argument("--output-csv", default="", help="Optional output CSV path")
     parser.add_argument("--output-html", default="", help="Optional output HTML path")
@@ -167,183 +315,29 @@ def main() -> int:
     parser.add_argument("--output-compare", default="", help="Optional output JSON for deltas")
     args = parser.parse_args()
 
-    artifacts_dir = Path(args.artifacts_dir)
-    rows = summarize(artifacts_dir)
+    rows, excluded = summarize(Path(args.artifacts_dir), include_mock=args.include_mock)
 
-    header = [
-        "condition",
-        "runs",
-        "pass_rate",
-        "mean_tokens",
-        "drift_slope",
-        "length_stddev",
-        "growth_ratio",
-        "instruction_pass_rate",
-        "hallucination_flag_rate",
-        "refusal_rate",
-    ]
-    print("\t".join(header))
+    print(_format_excluded(excluded))
+    print("\t".join(CSV_HEADER))
     for row in rows:
-        print("\t".join([
-            row["condition"],
-            str(row["runs"]),
-            _format_float(row["pass_rate"]),
-            _format_float(row["mean_tokens_per_turn"]),
-            _format_float(row["drift_slope"]),
-            _format_float(row["length_stddev"]),
-            _format_float(row["growth_ratio"]),
-            _format_float(row["instruction_pass_rate"]),
-            _format_float(row["hallucination_flag_rate"]),
-            _format_float(row["refusal_rate"]),
-        ]))
+        print("\t".join(_row_cells(row)))
 
     if args.output:
-        Path(args.output).write_text(json.dumps(rows, indent=2), encoding="utf-8")
+        Path(args.output).write_text(
+            json.dumps({"excluded": dict(excluded), "rows": rows}, indent=2), encoding="utf-8"
+        )
 
     if args.output_csv:
-        lines = [
-            "condition,runs,pass_rate,mean_tokens,drift_slope,length_stddev,growth_ratio,instruction_pass_rate,hallucination_flag_rate,refusal_rate"
-        ]
-        for row in rows:
-            lines.append(",".join([
-                row["condition"],
-                str(row["runs"]),
-                _format_float(row["pass_rate"]),
-                _format_float(row["mean_tokens_per_turn"]),
-                _format_float(row["drift_slope"]),
-                _format_float(row["length_stddev"]),
-                _format_float(row["growth_ratio"]),
-                _format_float(row["instruction_pass_rate"]),
-                _format_float(row["hallucination_flag_rate"]),
-                _format_float(row["refusal_rate"]),
-            ]))
+        lines = [",".join(CSV_HEADER)] + [",".join(_row_cells(row)) for row in rows]
         Path(args.output_csv).write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     if args.output_html:
-        def _num(value: float | None) -> float:
-            return float(value) if isinstance(value, (int, float)) else 0.0
-
-        max_mean = max((_num(row["mean_tokens_per_turn"]) for row in rows), default=1.0)
-        max_stddev = max((_num(row["length_stddev"]) for row in rows), default=1.0)
-
-        html_rows = []
-        for row in rows:
-            mean_val = _num(row["mean_tokens_per_turn"])
-            stddev_val = _num(row["length_stddev"])
-            mean_pct = (mean_val / max_mean * 100) if max_mean else 0.0
-            stddev_pct = (stddev_val / max_stddev * 100) if max_stddev else 0.0
-            html_rows.append(
-                "<tr>"
-                f"<td>{row['condition']}</td>"
-                f"<td>{row['runs']}</td>"
-                f"<td>{_format_float(row['pass_rate'])}</td>"
-                f"<td>{_format_float(row['mean_tokens_per_turn'])}</td>"
-                f"<td>{_format_float(row['drift_slope'])}</td>"
-                f"<td>{_format_float(row['length_stddev'])}</td>"
-                f"<td>{_format_float(row['growth_ratio'])}</td>"
-                f"<td>{_format_float(row['instruction_pass_rate'])}</td>"
-                f"<td>{_format_float(row['hallucination_flag_rate'])}</td>"
-                f"<td>{_format_float(row['refusal_rate'])}</td>"
-                f"<td><div class='bar' style='width:{mean_pct:.1f}%;'></div></td>"
-                f"<td><div class='bar bar-alt' style='width:{stddev_pct:.1f}%;'></div></td>"
-                "</tr>"
-            )
-
-        html = "\n".join([
-            "<!doctype html>",
-            "<html>",
-            "<head>",
-            "<meta charset='utf-8'/>",
-            "<title>Verbatim Summary</title>",
-            "<style>",
-            "body { font-family: Arial, sans-serif; padding: 16px; }",
-            "table { border-collapse: collapse; width: 100%; }",
-            "th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }",
-            "th { background: #f3f3f3; }",
-            ".bar { height: 10px; background: #2a7f62; }",
-            ".bar-alt { background: #2a4f7f; }",
-            "</style>",
-            "</head>",
-            "<body>",
-            "<h1>Verbatim Summary</h1>",
-            "<table>",
-            "<thead>",
-            "<tr>",
-            "<th>condition</th>",
-            "<th>runs</th>",
-            "<th>pass_rate</th>",
-            "<th>mean_tokens</th>",
-            "<th>drift_slope</th>",
-            "<th>length_stddev</th>",
-            "<th>growth_ratio</th>",
-            "<th>instruction_pass_rate</th>",
-            "<th>hallucination_flag_rate</th>",
-            "<th>refusal_rate</th>",
-            "<th>mean_tokens_bar</th>",
-            "<th>stddev_bar</th>",
-            "</tr>",
-            "</thead>",
-            "<tbody>",
-            *html_rows,
-            "</tbody>",
-            "</table>",
-            "</body>",
-            "</html>",
-        ])
-        Path(args.output_html).write_text(html, encoding="utf-8")
+        Path(args.output_html).write_text(_render_html(rows, excluded), encoding="utf-8")
 
     if args.compare_baseline:
-        baseline = next((row for row in rows if row["condition"] == args.compare_baseline), None)
-        if baseline:
-            deltas = []
-            for row in rows:
-                if row["condition"] == args.compare_baseline:
-                    continue
-                deltas.append({
-                    "baseline": args.compare_baseline,
-                    "candidate": row["condition"],
-                    "deltas": {
-                        "mean_tokens_delta": (
-                            row["mean_tokens_per_turn"] - baseline["mean_tokens_per_turn"]
-                            if row["mean_tokens_per_turn"] is not None and baseline["mean_tokens_per_turn"] is not None
-                            else None
-                        ),
-                        "drift_slope_delta": (
-                            row["drift_slope"] - baseline["drift_slope"]
-                            if row["drift_slope"] is not None and baseline["drift_slope"] is not None
-                            else None
-                        ),
-                        "pass_rate_delta": (
-                            row["pass_rate"] - baseline["pass_rate"]
-                            if row["pass_rate"] is not None and baseline["pass_rate"] is not None
-                            else None
-                        ),
-                        "growth_ratio_delta": (
-                            row["growth_ratio"] - baseline["growth_ratio"]
-                            if row["growth_ratio"] is not None and baseline["growth_ratio"] is not None
-                            else None
-                        ),
-                        "instruction_pass_rate_delta": (
-                            row["instruction_pass_rate"] - baseline["instruction_pass_rate"]
-                            if row["instruction_pass_rate"] is not None and baseline["instruction_pass_rate"] is not None
-                            else None
-                        ),
-                        "hallucination_flag_rate_delta": (
-                            row["hallucination_flag_rate"] - baseline["hallucination_flag_rate"]
-                            if row["hallucination_flag_rate"] is not None and baseline["hallucination_flag_rate"] is not None
-                            else None
-                        ),
-                        "refusal_rate_delta": (
-                            row["refusal_rate"] - baseline["refusal_rate"]
-                            if row["refusal_rate"] is not None and baseline["refusal_rate"] is not None
-                            else None
-                        ),
-                    },
-                    "baseline_growth_ratio": baseline["growth_ratio"],
-                    "verbatim_growth_ratio": row["growth_ratio"] if row["condition"] == "verbatim" else None,
-                })
-            if args.output_compare:
-                Path(args.output_compare).write_text(json.dumps(deltas, indent=2), encoding="utf-8")
+        deltas = compute_deltas(rows, args.compare_baseline)
+        if args.output_compare:
+            Path(args.output_compare).write_text(json.dumps(deltas, indent=2), encoding="utf-8")
 
     return 0
 
