@@ -27,10 +27,10 @@ Core metrics:
 - Length stddev: variability in output length across turns; captures instability.
 
 ### Safety-adjacent checks (status)
-- Instruction adherence: Implemented and measured in this repo version.
-- Hallucination proxy: Implemented and measured in this repo version.
-- Refusal/over-refusal: Implemented and measured in this repo version.
-Planned checks are implemented in this repo version.
+- Instruction adherence: implemented, but not discriminating yet. No intent defines an instruction spec, so every turn passes; it is not reported in summaries until that is fixed.
+- Unsupported-claim proxy (regex): implemented. It flags numbers and capitalized phrases not found in the context, so false positives are common. It is a proxy, not hallucination detection.
+- Refusal keyword proxy: implemented. It flags phrases like "cannot" or "won't" anywhere in a reply, so it also matches ordinary answers. It is a proxy, not refusal detection.
+- None of these checks has been applied to the real-model runs yet. They ran only on mock-generator runs, which are now excluded. Applying them to real runs is planned (not implemented).
 
 Verbosity reduction alone is insufficient without safety and adherence checks.
 
@@ -56,19 +56,33 @@ The intervention treats verbosity as a correctness constraint rather than stylis
 Truncation and hard clipping were avoided to preserve coherence and to diagnose behavior rather than mask it.
 
 ## 7) Results
+
+**Withdrawn pending rerun.** The previous results table mixed mock-generator
+runs, failed runs, and real model runs, and grouped them only by condition.
+See the README "Results" section for the audit. Real-run data so far
+(claude-sonnet-4-20250514, 22 evaluated runs, unbalanced) is insufficient to
+compare conditions. This section will be replaced with per-condition means,
+standard deviations, and sample sizes from the balanced rerun.
+
 ### Results (Summary)
-| Condition | Mean tokens/turn | Drift slope (tokens/turn) | Growth ratio | Pass rate (verbosity) |
-|---|---:|---:|---:|---:|
-| baseline | 42.559 | -6.309 | 0.727 | 0.294 |
-| naive | 27.872 | -2.500 | 0.835 | 0.345 |
-| budgeted | 32.037 | -0.488 | 0.942 | 0.380 |
-| verbatim | 71.667 | -0.764 | 0.945 | 0.455 |
+Status: withdrawn. The current filtered summary, with `n` and standard deviation per
+(model, condition) cell, is in `artifacts/summary.csv`. It is not a basis for comparing conditions:
+
+| Condition | n | Pass rate (verbosity) |
+|---|---:|---:|
+| baseline | 9 | 0/9 |
+| naive | 5 | 0/5 |
+| budgeted | 6 | 0/6 |
+| verbatim | 2 | 0/2 |
+
+Observation, not a conclusion: in every real run the first answer is much longer than the
+rest (5 of 9 baseline runs hit the 512-token `max_tokens` cap on turn 0), and turns 1–11 are
+short and roughly flat. The negative drift slopes therefore mostly reflect the opening answer's
+length. The rerun should report drift both with and without turn 0.
 
 ### Deltas (baseline → verbatim)
-- Drift slope delta: 5.544969267574531
-- Mean tokens/turn delta: 29.107676900584792
-- Pass rate delta: 0.160427807486631
-- Growth ratio delta: 0.21821381471108503
+Withdrawn. With n = 2 for verbatim, no delta is reported. Per-model deltas with sample
+sizes are written to `artifacts/summary_deltas.json` for reference only.
 
 ## 8) Tradeoffs and Failure Cases
 Observed or expected tradeoffs:

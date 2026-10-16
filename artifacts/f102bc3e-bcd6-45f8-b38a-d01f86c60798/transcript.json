@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 1,
+    "user_text": "Summarize the key benefit in one sentence.",
+    "assistant_text": "Hash tables provide average O(1) constant-time access for inserting, deleting, and looking up data by key, making them ideal for fast data retrieval."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "State the average time complexity for lookup.",
+    "assistant_text": "O(1) - constant time."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one reason it can be faster than a list.",
+    "assistant_text": "Hash tables provide O(1) direct access to elements by key, while lists require O(n) sequential searching through elements to find a specific value."
+  },
+  {
+    "turn_index": 0,
+    "user_text": "Explain what a hash table is and when to use it.",
+    "assistant_text": "A hash table (or hash map) is a data structure that stores key-value pairs using a hash function to map keys to array indices. The hash function converts keys into array positions, enabling fast lookups.\n\n**How it works:**\n- Hash function transforms key \u2192 array index\n- Store value at that index\n- Handle collisions (multiple keys mapping to same index) via chaining or open addressing\n\n**Time complexity:**\n- Average: O(1) for insert, delete, lookup\n- Worst case: O(n) if many collisions\n\n**When to use:**\n- Fast lookups needed (databases, caches)\n- Counting frequencies\n- Implementing sets\n- Memoization\n- Symbol tables in compilers\n\n**Avoid when:**\n- Need ordered data\n- Memory is very limited\n- Keys don't hash well\n\nHash tables excel when you need constant-time access to data by key."
+  },
+  {
+    "turn_index": 3,
+    "user_text": "Name one tradeoff compared to a balanced tree.",
+    "assistant_text": "Hash tables lose ordering - you can't efficiently iterate through data in sorted order, while balanced trees maintain sorted order and support range queries."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "What is a good alternative when memory is tight?",
+    "assistant_text": "A sorted array with binary search - uses less memory overhead (no hash table structure) and provides O(log n) lookup time, which is still efficient for many use cases."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a one-line recap.",
+    "assistant_text": "Hash tables use hash functions to map keys to array indices, providing O(1) average-case lookup, insertion, and deletion for fast key-based data access."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in a short bullet list.",
+    "assistant_text": "\u2022 **What**: Data structure mapping keys to values via hash function\n\u2022 **Speed**: O(1) average lookup/insert/delete time\n\u2022 **Use when**: Need fast key-based access (caches, databases, counting)\n\u2022 **Avoid when**: Need sorted data or tight memory constraints\n\u2022 **Tradeoff**: Fast access but no ordering, potential collisions"
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give one practical example in everyday apps.",
+    "assistant_text": "A web browser's cache uses hash tables to store website data, mapping URLs (keys) to cached content (values) for instant page loading without re-downloading."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "List two common pitfalls.",
+    "assistant_text": "1. **Poor hash function** - Causes many collisions, degrading performance from O(1) to O(n)\n2. **Not handling collisions properly** - Can lead to data loss or infinite loops when multiple keys hash to the same index"
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide one short analogy.",
+    "assistant_text": "A hash table is like a library's card catalog system - you use the book title (key) to quickly find the exact drawer and card (hash function maps to index) containing the book's location (value), instead of searching through every card sequentially."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "Describe when I should not use it.",
+    "assistant_text": "Don't use hash tables when you need:\n- **Ordered data** - iterating in sorted order or finding min/max values\n- **Range queries** - finding all values between two keys\n- **Memory-constrained environments** - hash tables have overhead for buckets and collision handling\n- **Predictable worst-case performance** - hash tables can degrade to O(n) with poor hash functions or many collisions\n\nUse arrays, trees, or other structures instead for these scenarios."
+  }
+]

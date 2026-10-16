@@ -72,7 +72,7 @@ python verbatim/analysis/summarize.py \
 - `turn_metrics.json`: per-turn token and latency metadata
 - `evaluator_results.json`: evaluator outputs per run
 - `aggregate_metrics.json`: rollup metrics for the run
-- `summary.csv`: condition-level aggregation
+- `summary.csv`: aggregation per (model, condition) with `n` and standard deviations; failed, mock (model null or `mock-echo`), and unevaluated runs are excluded (pass `--include-mock` to keep mock runs)
 - `summary.html`: HTML table view
 
 Interpretation notes:
@@ -91,4 +91,4 @@ characterize variance; for tighter estimates, run N replicates per condition and
 - Sample size is limited to the runs executed locally.
 - Model versions can change over time.
 - API and inference behavior are non-deterministic.
-- Backend can operate in mock mode without real model calls.
+- The local backend in `backend/` never calls a model: it echoes the system prompt plus the user text and counts words, not tokens. Runs it produces have `model: null` and are excluded from summaries. Real runs must go through an API that calls the model and reports provider token counts.

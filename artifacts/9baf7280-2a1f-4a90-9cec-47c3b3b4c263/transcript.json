@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 6,
+    "user_text": "What is a good alternative when memory is tight?",
+    "assistant_text": "**Balanced binary search tree** (like AVL or Red-Black tree) - uses O(log n) time but has better memory efficiency with no wasted array slots or collision overhead."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide one short analogy.",
+    "assistant_text": "A hash table is like a **library with a card catalog** - you use the book title (key) to quickly find the exact shelf location (hash index) where the book (value) is stored, instead of searching every shelf."
+  },
+  {
+    "turn_index": 1,
+    "user_text": "Summarize the key benefit in one sentence.",
+    "assistant_text": "Hash tables provide **constant-time O(1) average performance** for inserting, deleting, and looking up data by key."
+  },
+  {
+    "turn_index": 3,
+    "user_text": "Name one tradeoff compared to a balanced tree.",
+    "assistant_text": "Hash tables lose **ordering** - you can't efficiently traverse data in sorted order or perform range queries like you can with balanced trees."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "State the average time complexity for lookup.",
+    "assistant_text": "**O(1)** - constant time on average."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "Describe when I should not use it.",
+    "assistant_text": "Don't use a hash table when you need:\n\n- **Sorted/ordered data** - can't iterate in key order\n- **Range queries** - can't efficiently find all keys between two values\n- **Memory-constrained environments** - wastes space on empty slots\n- **Predictable worst-case performance** - collisions can cause O(n) degradation"
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a one-line recap.",
+    "assistant_text": "Hash tables trade memory for speed, using hash functions to enable O(1) key-based lookups at the cost of losing data ordering."
+  },
+  {
+    "turn_index": 0,
+    "user_text": "Explain what a hash table is and when to use it.",
+    "assistant_text": "A **hash table** (or hash map) is a data structure that stores key-value pairs using a hash function to map keys to array indices for fast access.\n\n## How it works:\n- Hash function converts keys into array indices\n- Values are stored at those computed positions\n- Handles collisions through chaining or open addressing\n\n## Key characteristics:\n- **Average time complexity**: O(1) for insert, delete, and lookup\n- **Space complexity**: O(n)\n- **Worst case**: O(n) if many collisions occur\n\n## When to use hash tables:\n- **Fast lookups**: Need to quickly find values by key\n- **Caching**: Store computed results for reuse\n- **Counting/frequency**: Track occurrences of items\n- **Set operations**: Check membership, remove duplicates\n- **Database indexing**: Speed up data retrieval\n- **Implementing other structures**: Like sets or dictionaries\n\n## Examples:\n- User authentication (username \u2192 user data)\n- DNS resolution (domain \u2192 IP address)\n- Compiler symbol tables\n- Web browser caches\n\nHash tables excel when you need fast, constant-time access to data by key, but aren't ideal when you need ordered data or range queries."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give one practical example in everyday apps.",
+    "assistant_text": "**Web browser cache**: When you visit a website, your browser stores the page content in a hash table using the URL as the key, so returning to that site loads instantly without re-downloading everything."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "List two common pitfalls.",
+    "assistant_text": "1. **Poor hash function**: Causes clustering and frequent collisions, degrading performance from O(1) to O(n)\n\n2. **Not handling collisions properly**: Can lead to data loss or infinite loops when multiple keys hash to the same index"
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one reason it can be faster than a list.",
+    "assistant_text": "Hash tables provide **direct access** to elements using the key, while lists require **sequential searching** through elements until you find the target (O(1) vs O(n) lookup time)."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in a short bullet list.",
+    "assistant_text": "\u2022 **What**: Data structure storing key-value pairs with hash function mapping\n\u2022 **Speed**: O(1) average lookup, insert, delete\n\u2022 **Best for**: Fast key-based access, caching, counting\n\u2022 **Tradeoff**: Uses more memory, loses ordering\n\u2022 **Avoid when**: Need sorted data or range queries"
+  }
+]

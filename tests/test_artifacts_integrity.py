@@ -1,5 +1,6 @@
 from pathlib import Path
 import csv
+import json
 
 
 def test_artifacts_exist_if_docs_reference_them():
@@ -16,6 +17,8 @@ def test_artifacts_exist_if_docs_reference_them():
     header_lower = [col.strip().lower() for col in header]
 
     assert "condition" in header_lower
+    assert "model" in header_lower
+    assert "n" in header_lower
     assert any(name in header_lower for name in ["mean_tokens_per_turn", "mean_tokens", "mean_tokens_turn"])
     assert any(name in header_lower for name in ["drift_slope", "slope"])
     assert any(name in header_lower for name in ["growth_ratio", "growth"])
@@ -26,3 +29,10 @@ def test_backend_venv_not_present_and_ignored():
     assert not Path("backend/venv").exists()
     gitignore = Path(".gitignore").read_text(encoding="utf-8")
     assert "backend/venv/" in gitignore
+
+
+def test_committed_artifacts_are_real_completed_runs():
+    for path in Path("artifacts").glob("*/aggregate_metrics.json"):
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        assert payload.get("status") == "completed", path
+        assert payload.get("model") not in (None, "", "mock-echo"), path

@@ -31,7 +31,7 @@ This repository is intentionally **evaluation-first**, not a hosted service.
   - verbatim (invariant + self-monitoring + fallback)
 - Multi-turn experiment harness for fixed-intent conversations
 - Verbosity stability evaluator (drift slope, variance, growth ratio)
-- Reproducible artifacts (CSV/JSON summaries)
+- Run artifacts and CSV/JSON summaries (real-model runs only; see Results)
 - Internal-style case study and reproducibility documentation
 
 I include **no UI and no running backend** in this version by design.
@@ -79,16 +79,32 @@ I evaluate verbosity stability quantitatively rather than qualitatively.
 
 Verbosity reduction alone is insufficient without safety and adherence checks.
 
-Safety-adjacent evaluators (instruction adherence, hallucination proxy, refusal behavior) are explicitly called out in the case study and have supporting tests in this repo version.
+Safety-adjacent evaluators are regex/keyword proxies, not detectors: an instruction-adherence check, an unsupported-claim proxy (regex), and a refusal keyword proxy. None of them has been applied to the real-model runs yet, and instruction adherence passes unconditionally until intents define an instruction spec. See the case study for status.
 
 ---
 
-## Results
+## Results — status: invalidated, rerun pending
 
-All reported numbers are derived from committed artifacts.
+An audit of the original artifacts (October 2026) found that the published
+summary pooled three kinds of runs:
 
-- Aggregated metrics: `artifacts/summary.csv`
-- Baseline → Verbatim deltas: `artifacts/summary_deltas.json`
+- 60 runs from the local backend's mock generator, which echoes the prompt
+  instead of calling a model (all "passed");
+- 80 runs on claude-3-5-sonnet-20241022 that failed with no output;
+- 24 real runs on claude-sonnet-4-20250514 (baseline 10, budgeted 7,
+  naive 5, verbatim 2). 22 of them failed the verbosity check; the other 2
+  completed without a verbosity evaluation.
+
+The earlier table and deltas are withdrawn. The real runs are too few and
+too unbalanced to support a conclusion, so **the verbosity-drift hypothesis
+is currently untested**. The aggregation now excludes failed, mock, and
+unevaluated runs and reports results per model with sample sizes and standard
+deviations; a balanced rerun (4 conditions × 4 intents × 10 runs, one model)
+is planned.
+
+- Committed artifacts: the 24 real claude-sonnet-4-20250514 runs only. Mock and failed runs are kept locally in the git-ignored `artifacts_excluded/`.
+- Current summary (22 evaluated real runs, n and SD per cell): `artifacts/summary.csv`
+- Per-model deltas against baseline, with sample sizes: `artifacts/summary_deltas.json`
 
 A detailed analysis, including failure modes and tradeoffs, is documented in:
 

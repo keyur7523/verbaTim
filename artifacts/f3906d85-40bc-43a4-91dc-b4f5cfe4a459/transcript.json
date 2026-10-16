@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 1,
+    "user_text": "Give the main difference in one sentence.",
+    "assistant_text": "REST uses multiple endpoints with fixed data structures, while GraphQL uses a single endpoint where clients specify exactly what data they need."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Which is simpler to cache and why?",
+    "assistant_text": "REST is simpler to cache because it uses standard HTTP caching mechanisms (headers, status codes, URLs) that work automatically with browsers, CDNs, and proxy servers, while GraphQL requires custom caching solutions since all requests go to one endpoint with varying query bodies."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "Which is easier to secure by default?",
+    "assistant_text": "REST is easier to secure by default because you can apply standard HTTP security measures (authentication, rate limiting, permissions) per endpoint, while GraphQL requires custom security logic to prevent malicious queries, query depth attacks, and unauthorized field access."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Provide a final short recap.",
+    "assistant_text": "**Final Recap:** For a small internal API with a 2-person team, use REST - it's simpler to build, debug, cache, and secure, letting you ship faster without the complexity overhead of GraphQL."
+  },
+  {
+    "turn_index": 0,
+    "user_text": "Compare REST and GraphQL for a small internal API.",
+    "assistant_text": "**REST vs GraphQL for Small Internal APIs**\n\n**REST is better for small internal APIs because:**\n- **Simpler to implement** - Less setup, familiar HTTP patterns\n- **Lower learning curve** - Team can start immediately\n- **Better tooling** - More debugging tools, testing frameworks\n- **Caching is straightforward** - HTTP caching works out-of-the-box\n- **Less overhead** - No query parsing or schema complexity\n\n**GraphQL advantages (but may be overkill):**\n- Single endpoint for all data needs\n- Prevents over-fetching\n- Strong typing and introspection\n\n**Recommendation:** Use REST for small internal APIs. The simplicity and speed of development outweigh GraphQL's benefits at this scale. Consider GraphQL only if you have complex data relationships or multiple client types with very different data needs."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "Name one downside of REST for changing requirements.",
+    "assistant_text": "REST requires creating new endpoints or modifying existing ones when data requirements change, leading to API versioning issues and potential breaking changes for clients."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide one thing they have in common.",
+    "assistant_text": "Both REST and GraphQL are stateless - they don't store client context between requests."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "State which has clearer tooling out of the box.",
+    "assistant_text": "REST has clearer tooling out of the box - standard HTTP tools like Postman, curl, browser dev tools, and server logs work immediately without any setup."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give a one-line summary.",
+    "assistant_text": "For small teams, choose REST for simplicity and speed, or GraphQL for flexible data fetching at the cost of complexity."
+  },
+  {
+    "turn_index": 3,
+    "user_text": "Name one downside of GraphQL for a small team.",
+    "assistant_text": "GraphQL has a steep learning curve that requires the team to master query language syntax, schema design, and resolver implementation, which can slow down development for a small team."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a short recommendation for a 2-person team.",
+    "assistant_text": "Use REST - it's faster to build, easier to debug, and requires no learning curve, letting your 2-person team focus on business logic instead of GraphQL complexity."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Answer in two bullets.",
+    "assistant_text": "\u2022 **REST**: Simpler, faster to implement, better tooling, easier caching and security\n\u2022 **GraphQL**: More flexible data fetching but adds complexity and learning curve"
+  }
+]

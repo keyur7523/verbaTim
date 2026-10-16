@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 6,
+    "user_text": "What is a good alternative when memory is tight?",
+    "assistant_text": "**Balanced trees** (like AVL or red-black trees) - they use less memory overhead and provide O(log n) operations without needing extra space for hash table load factors or collision handling."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in a short bullet list.",
+    "assistant_text": "\u2022 **What**: Key-value storage with hash function mapping\n\u2022 **Speed**: O(1) average lookup time\n\u2022 **Best for**: Fast searches, caching, counting\n\u2022 **Tradeoff**: No ordering, memory overhead\n\u2022 **Avoid when**: Need sorted data access"
+  },
+  {
+    "turn_index": 0,
+    "user_text": "Explain what a hash table is and when to use it.",
+    "assistant_text": "A **hash table** (or hash map) is a data structure that stores key-value pairs using a hash function to map keys to array indices for fast access.\n\n## How it works:\n- Hash function converts keys into array indices\n- Values are stored at those computed positions\n- Handles collisions through chaining or open addressing\n\n## Key characteristics:\n- **Average time complexity**: O(1) for insert, delete, and lookup\n- **Space complexity**: O(n)\n- **Worst case**: O(n) if many collisions occur\n\n## When to use hash tables:\n- **Fast lookups**: Need to quickly find values by key\n- **Caching**: Store computed results for reuse\n- **Counting/frequency**: Track occurrences of items\n- **Set operations**: Check membership, remove duplicates\n- **Database indexing**: Speed up record retrieval\n- **Implementing other structures**: Like sets or dictionaries\n\n## Common examples:\n- Phone book (name \u2192 number)\n- Database indexes\n- Browser caches\n- Compiler symbol tables\n- Password storage systems\n\nHash tables excel when you need fast, direct access to data but don't require ordered traversal."
+  },
+  {
+    "turn_index": 1,
+    "user_text": "Summarize the key benefit in one sentence.",
+    "assistant_text": "Hash tables provide **O(1) average-time lookups**, making them ideal when you need fast access to data by key."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give one practical example in everyday apps.",
+    "assistant_text": "**Social media username lookup** - when you search for \"@username\" on Twitter/Instagram, a hash table instantly maps the username to the user's profile data."
+  },
+  {
+    "turn_index": 3,
+    "user_text": "Name one tradeoff compared to a balanced tree.",
+    "assistant_text": "Hash tables **lose ordering** - you can't efficiently traverse data in sorted order like you can with balanced trees."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "List two common pitfalls.",
+    "assistant_text": "1. **Poor hash function** - causes clustering/collisions, degrading performance to O(n)\n2. **Dynamic resizing overhead** - table expansions can cause temporary performance spikes"
+  },
+  {
+    "turn_index": 5,
+    "user_text": "State the average time complexity for lookup.",
+    "assistant_text": "**O(1)** - constant time on average."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide one short analogy.",
+    "assistant_text": "A hash table is like a **library with a card catalog** - instead of searching every shelf, you look up the book's location code and go directly to the right spot."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "Describe when I should not use it.",
+    "assistant_text": "Don't use hash tables when you need **sorted/ordered data access** - like displaying users alphabetically or finding the next/previous item in sequence."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one reason it can be faster than a list.",
+    "assistant_text": "Hash tables use **direct indexing** via hash function instead of scanning through elements sequentially like lists do for searches."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a one-line recap.",
+    "assistant_text": "Hash tables trade memory for speed, providing instant key-based lookups at the cost of losing data ordering."
+  }
+]
