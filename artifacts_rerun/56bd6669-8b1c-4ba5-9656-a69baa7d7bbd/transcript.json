@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Summarize the benefits of code review for a small team.",
+    "assistant_text": "**Benefits of Code Review for Small Teams:**\n\n- **Catches bugs early** before they reach production\n- **Shares knowledge** across team members\n- **Maintains consistency** in coding style and standards\n- **Improves code quality** through collaborative feedback\n- **Reduces technical debt** over time\n- **Mentors junior developers** naturally\n- **Creates shared ownership** of the codebase"
+  },
+  {
+    "turn_index": 1,
+    "user_text": "Give a one-sentence summary.",
+    "assistant_text": "Code review helps small teams catch bugs early, share knowledge, and maintain higher code quality through collaborative feedback."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "List two concrete benefits.",
+    "assistant_text": "1. **Bug detection** \u2013 Catches errors before they reach production, saving time and costs.\n2. **Knowledge sharing** \u2013 Team members learn from each other, reducing knowledge silos."
+  },
+  {
+    "turn_index": 3,
+    "user_text": "Name one cultural benefit.",
+    "assistant_text": "Code review fosters a **culture of collaboration and shared ownership**, where everyone feels responsible for the quality of the codebase."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "State one risk if reviews are skipped.",
+    "assistant_text": "Skipping reviews risks **accumulating technical debt**, as unchecked code issues compound over time and become costly to fix."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "Provide one metric to track.",
+    "assistant_text": "Track **defect escape rate** \u2013 the percentage of bugs found in production versus those caught during review \u2013 to measure review effectiveness."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a short concluding line.",
+    "assistant_text": "Consistent code reviews are a small investment that pays dividends in quality, teamwork, and long-term maintainability."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Answer in bullets only.",
+    "assistant_text": "\u2022 Consistent code reviews boost quality and catch bugs early.\n\u2022 They strengthen teamwork and shared ownership.\n\u2022 Long-term, they reduce costs and technical debt."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "Provide a final one-line recap.",
+    "assistant_text": "Code reviews are a simple practice that delivers lasting benefits in quality, collaboration, and maintainability."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Offer one caveat.",
+    "assistant_text": "Reviews can slow delivery if not timeboxed, so keep feedback focused and sessions brief."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Restate in 10 words.",
+    "assistant_text": "Keep reviews brief and focused to avoid slowing team delivery."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Provide a final short summary.",
+    "assistant_text": "Code reviews improve quality and teamwork\u2014keep them focused and efficient."
+  }
+]

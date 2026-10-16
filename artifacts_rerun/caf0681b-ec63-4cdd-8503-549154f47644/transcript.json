@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Plan a 1-day migration from SVN to Git for a small repo.",
+    "assistant_text": "# 1-Day SVN \u2192 Git Migration Plan\n\n## Morning (4h)\n1. **Audit SVN repo** \u2013 size, branches, tags, authors list\n2. **Create authors mapping file** (`authors.txt`: `svnuser = Name <email>`)\n3. **Clone with git-svn**: `git svn clone <SVN_URL> --authors-file=authors.txt --stdlayout`\n\n## Midday (2h)\n4. **Clean up** \u2013 convert tags/branches, remove `git-svn` metadata\n5. **Verify history** \u2013 `git log`, diff key commits\n\n## Afternoon (2h)\n6. **Push to remote** (GitHub/GitLab)\n7. **Test clone** on fresh machine\n8. **Lock SVN repo** (read-only)\n\n## End of Day (2h)\n9. **Notify team**, share new remote URL\n10. **Update CI/CD pipelines**\n11. **Document** any quirks found\n\n---\n**Key tools:** `git-svn`, `svn2git` (optional)\n**Risk:** Large binaries \u2192 consider Git LFS"
+  },
+  {
+    "turn_index": 1,
+    "user_text": "List the top 3 risks.",
+    "assistant_text": "## Top 3 Migration Risks\n\n1. **History Loss** \u2013 Merge metadata, svn:externals, or binary properties may not convert cleanly.\n\n2. **Author Mapping Errors** \u2013 Unmapped users cause commits to have incorrect/missing identities.\n\n3. **Large Files/Binaries** \u2013 Bloats Git repo; can hit remote push limits without Git LFS setup."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give a short checklist.",
+    "assistant_text": "## Migration Checklist\n\n- [ ] Audit SVN repo size & structure\n- [ ] Create complete `authors.txt`\n- [ ] Run `git svn clone` successfully\n- [ ] Verify full commit history\n- [ ] Convert tags/branches correctly\n- [ ] Push to remote & test fresh clone\n- [ ] Lock SVN repo (read-only)\n- [ ] Update CI/CD pipelines\n- [ ] Notify team"
+  },
+  {
+    "turn_index": 3,
+    "user_text": "State one rollback option.",
+    "assistant_text": "**Rollback Option:** Keep SVN repo in **read-only mode** (don't delete it) for 2\u20134 weeks. If issues arise, revert CI/CD pipelines to point back to SVN and resume work there."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "Name one prerequisite.",
+    "assistant_text": "**Prerequisite:** `git-svn` installed and verified on the migration machine (`git svn --version`)."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "What is the fastest validation step?",
+    "assistant_text": "**Fastest Validation:** Run `git log --oneline | wc -l` and compare the commit count against SVN's `svn log --quiet | grep \"^r\" | wc -l` to confirm history matches."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a one-line timeline.",
+    "assistant_text": "**Timeline:** Audit \u2192 Clone \u2192 Clean \u2192 Verify \u2192 Push \u2192 Lock \u2192 Notify *(~8 hours total)*"
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide two tools you might use.",
+    "assistant_text": "1. **git-svn** \u2013 converts SVN history to Git commits\n2. **svn2git** \u2013 automates branch/tag cleanup post-conversion"
+  },
+  {
+    "turn_index": 8,
+    "user_text": "State who should approve the final cutover.",
+    "assistant_text": "**Approver:** The **Tech Lead or Engineering Manager** should approve final cutover after verifying history integrity and CI/CD success."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one short communication tip.",
+    "assistant_text": "**Tip:** Send a **24-hour heads-up** email to the team with the new Git remote URL and cutover time before locking SVN."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a final recap.",
+    "assistant_text": "## Final Recap\n\n- **Goal:** Migrate SVN \u2192 Git in 1 day\n- **Key Steps:** Audit, Clone, Verify, Push, Lock, Notify\n- **Top Risks:** History loss, author errors, large files\n- **Tools:** `git-svn`, `svn2git`\n- **Rollback:** Keep SVN read-only for 2\u20134 weeks\n- **Approver:** Tech Lead/Engineering Manager\n- **Cutover Notice:** 24-hour team heads-up\n\n\u2705 **Done!**"
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in short bullets only.",
+    "assistant_text": "- Migrate SVN \u2192 Git in 1 day\n- Audit, Clone, Verify, Push, Lock, Notify\n- Risks: history loss, author errors, large files\n- Tools: `git-svn`, `svn2git`\n- Rollback: keep SVN read-only\n- Approver: Tech Lead\n- Notice: 24hr heads-up"
+  }
+]

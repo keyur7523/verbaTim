@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Plan a 1-day migration from SVN to Git for a small repo.",
+    "assistant_text": "# 1-Day SVN \u2192 Git Migration Plan\n\n## Morning (4h)\n1. **Audit SVN repo** \u2013 check size, branches, tags, externals\n2. **Map authors** \u2013 create `authors.txt` (SVN user \u2192 Git email)\n3. **Clone with git-svn**:\n```bash\ngit svn clone SVN_URL --authors-file=authors.txt --stdlayout\n```\n\n## Midday (2h)\n4. **Clean up** \u2013 convert tags/branches, remove `git-svn` metadata\n5. **Verify history** \u2013 `git log`, diff key commits\n\n## Afternoon (2h)\n6. **Push to remote** (GitHub/GitLab)\n7. **Test clone** on fresh machine\n8. **Lock SVN repo** (read-only)\n\n## End of Day (2h)\n9. **Update CI/CD** pipelines\n10. **Notify team**, share new remote URL\n11. **Document** branching workflow going forward\n\n---\n**Key tools:** `git-svn`, `svn2git`\n**Risk:** SVN externals \u2192 use Git submodules or subtrees as replacement"
+  },
+  {
+    "turn_index": 1,
+    "user_text": "List the top 3 risks.",
+    "assistant_text": "# Top 3 Migration Risks\n\n## 1. \ud83d\uddc2\ufe0f SVN Externals\n- Don't map directly to Git\n- **Mitigation:** Replace with submodules or subtrees *before* cutover\n\n## 2. \ud83d\udc64 Author Mapping Gaps\n- Missing users cause import failures\n- **Mitigation:** Audit `authors.txt` thoroughly; add a catch-all default\n\n## 3. \ud83d\udcdc History Corruption\n- Merges/branching may not translate cleanly\n- **Mitigation:** Verify `git log --graph` matches SVN history before locking repo"
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give a short checklist.",
+    "assistant_text": "# Migration Checklist\n\n- [ ] Audit SVN repo (size, branches, externals)\n- [ ] Create complete `authors.txt`\n- [ ] Run `git svn clone`\n- [ ] Verify history with `git log`\n- [ ] Clean up tags/branches\n- [ ] Push to remote\n- [ ] Test fresh clone\n- [ ] Lock SVN repo\n- [ ] Update CI/CD\n- [ ] Notify team"
+  },
+  {
+    "turn_index": 3,
+    "user_text": "State one rollback option.",
+    "assistant_text": "**Keep SVN read-only (don't delete it) for 2\u20134 weeks post-migration.**\n\nIf issues arise, revert CI/CD pipelines to point back to SVN instantly."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "Name one prerequisite.",
+    "assistant_text": "**Install and verify `git-svn`** on the migration machine before starting.\n\n```bash\ngit svn --version\n```"
+  },
+  {
+    "turn_index": 5,
+    "user_text": "What is the fastest validation step?",
+    "assistant_text": "**Run `git log --oneline | wc -l`** and confirm the commit count matches SVN's revision count."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a one-line timeline.",
+    "assistant_text": "**Audit \u2192 Clone \u2192 Verify \u2192 Push \u2192 Lock \u2192 Notify** \u2014 all within 8 hours."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide two tools you might use.",
+    "assistant_text": "1. **`git-svn`** \u2013 clones SVN history into Git\n2. **`svn2git`** \u2013 automates branch/tag cleanup post-clone"
+  },
+  {
+    "turn_index": 8,
+    "user_text": "State who should approve the final cutover.",
+    "assistant_text": "**The project/team lead** \u2014 they confirm history is verified and CI/CD is updated before SVN is locked."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one short communication tip.",
+    "assistant_text": "**Send a single email 24 hours before cutover** with the new Git URL, timeline, and a contact for issues."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a final recap.",
+    "assistant_text": "# Final Recap\n\n- **Plan:** 8-hour, 1-day migration\n- **Tools:** `git-svn`, `svn2git`\n- **Top risks:** Externals, author mapping, history corruption\n- **Approver:** Team/project lead\n- **Rollback:** Keep SVN read-only 2\u20134 weeks\n- **Validate:** Match commit counts\n- **Communicate:** Email team 24h before cutover\n\n\u2705 **Done right, migration is low-risk and reversible.**"
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in short bullets only.",
+    "assistant_text": "- 8-hour plan\n- Use `git-svn`, `svn2git`\n- Map authors early\n- Verify commit counts\n- Keep SVN read-only as fallback\n- Team lead approves cutover\n- Notify team 24h before"
+  }
+]

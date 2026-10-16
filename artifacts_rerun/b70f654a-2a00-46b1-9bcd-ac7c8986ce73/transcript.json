@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Plan a 1-day migration from SVN to Git for a small repo.",
+    "assistant_text": "# 1-Day SVN \u2192 Git Migration Plan\n\n## Morning (4h)\n1. **Audit SVN repo** \u2013 check size, branches, tags, authors list\n2. **Create authors mapping file** (`authors.txt`: `svnuser = Name <email>`)\n3. **Clone with git-svn**: `git svn clone <SVN_URL> --authors-file=authors.txt --stdlayout`\n\n## Midday (2h)\n4. **Clean up** \u2013 convert SVN tags to Git tags, remove `git-svn` metadata\n5. **Verify history** \u2013 `git log`, diff key commits\n\n## Afternoon (2h)\n6. **Push to remote** (GitHub/GitLab)\n7. **Test clone** on a fresh machine\n8. **Update CI/CD** configs\n\n## End of Day (2h)\n9. **Notify team**, share new repo URL\n10. **Lock SVN repo** (read-only)\n11. **Document** the new Git workflow\n\n---\n**Key tools:** `git-svn`, `svn2git`\n**Risk:** Large binary files \u2192 consider Git LFS"
+  },
+  {
+    "turn_index": 1,
+    "user_text": "List the top 3 risks.",
+    "assistant_text": "# Top 3 Migration Risks\n\n1. **History Corruption**\n - Missing/incorrect author mappings break commit history\n - *Mitigation:* Audit `authors.txt` thoroughly before cloning\n\n2. **Large Binary Files**\n - Bloats Git repo, slows clones\n - *Mitigation:* Use Git LFS or remove binaries pre-migration\n\n3. **Branch/Tag Mismatches**\n - SVN branches don't map cleanly to Git\n - *Mitigation:* Manually verify all branches and tags post-clone"
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give a short checklist.",
+    "assistant_text": "# Migration Checklist\n\n- [ ] Audit SVN repo size & structure\n- [ ] Create authors mapping file\n- [ ] Run `git svn clone`\n- [ ] Verify commit history\n- [ ] Convert tags & branches\n- [ ] Push to remote\n- [ ] Test fresh clone\n- [ ] Update CI/CD\n- [ ] Lock SVN repo\n- [ ] Notify team"
+  },
+  {
+    "turn_index": 3,
+    "user_text": "State one rollback option.",
+    "assistant_text": "**Rollback Option:**\nKeep SVN repo in **read-only mode** (don't delete it) until the team confirms Git is stable \u2014 revert by simply re-enabling SVN write access."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "Name one prerequisite.",
+    "assistant_text": "**Prerequisite:**\nInstall and verify **`git-svn`** on the migration machine before starting."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "What is the fastest validation step?",
+    "assistant_text": "**Fastest Validation Step:**\nRun `git log --oneline` and compare commit count against SVN's `svn log --limit 10` to quickly confirm history transferred correctly."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a one-line timeline.",
+    "assistant_text": "**Timeline:** Audit \u2192 Clone \u2192 Clean \u2192 Verify \u2192 Push \u2192 Notify \u2014 all within 8 hours."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide two tools you might use.",
+    "assistant_text": "1. **`git-svn`** \u2013 clones SVN history into Git\n2. **`svn2git`** \u2013 automates branch/tag conversion cleanly"
+  },
+  {
+    "turn_index": 8,
+    "user_text": "State who should approve the final cutover.",
+    "assistant_text": "**The project/team lead** (or repository owner) should approve the final cutover."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one short communication tip.",
+    "assistant_text": "**Tip:** Send a single team-wide message with the new Git repo URL, cutover time, and a one-line clone command ready to copy-paste."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a final recap.",
+    "assistant_text": "# Final Recap\n\n- **Plan:** 1-day migration using `git-svn` / `svn2git`\n- **Top Risks:** History corruption, large binaries, branch mismatches\n- **Prerequisite:** Install `git-svn` first\n- **Validate:** Compare `git log` vs SVN log\n- **Rollback:** Keep SVN read-only until stable\n- **Approve:** Team/project lead signs off\n- **Communicate:** Share new URL + clone command with team\n\n**Goal:** Clean, verified Git repo live by end of day. \u2705"
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in short bullets only.",
+    "assistant_text": "- Plan 1-day migration\n- Use `git-svn`/`svn2git`\n- Map authors first\n- Verify history\n- Team lead approves\n- Keep SVN as fallback\n- Notify team with clone command \u2705"
+  }
+]

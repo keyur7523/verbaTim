@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Explain what a hash table is and when to use it.",
+    "assistant_text": "## Hash Table\n\nA hash table (or hash map) is a data structure that stores **key-value pairs** using a **hash function** to compute an index into an array of buckets.\n\n### How It Works\n1. You provide a **key** (e.g., `\"username\"`)\n2. A **hash function** converts the key into an array index\n3. The **value** is stored/retrieved at that index\n\n```\nkey \u2192 hash function \u2192 index \u2192 value\n\"name\" \u2192 h() \u2192 3 \u2192 \"Alice\"\n```\n\n### Key Properties\n| Property | Average Case | Worst Case |\n|----------|-------------|------------|\n| Lookup | O(1) | O(n) |\n| Insert | O(1) | O(n) |\n| Delete | O(1) | O(n) |\n\n> Worst case occurs with many **hash collisions** (different keys mapping to the same index)\n\n---\n\n## When to Use It\n\n**\u2705 Good for:**\n- Fast lookups by key (caches, databases, indexes)\n- Counting/frequency tracking (`word \u2192 count`)\n- Deduplication (checking if something exists)\n- Grouping/categorizing data\n\n**\u274c Avoid when:**\n- You need **sorted data** (use a BST/sorted array)\n- You need **ordered iteration**\n- Memory is very constrained (hash tables have overhead)\n- Keys have poor hash distribution\n\n---\n\n## Common Examples\n- **DNS caching** \u2013 domain \u2192 IP address\n- **Database indexing** \u2013 key \u2192 row location\n- **Python dicts / JavaScript objects** \u2013 built on hash tables"
+  },
+  {
+    "turn_index": 1,
+    "user_text": "Summarize the key benefit in one sentence.",
+    "assistant_text": "Hash tables provide **O(1) average-time lookups** by mapping keys directly to values via a hash function."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give one practical example in everyday apps.",
+    "assistant_text": "A web browser uses a hash table to store your **browsing history**, mapping URLs (keys) to page data (values) for instant lookups when you revisit a site."
+  },
+  {
+    "turn_index": 3,
+    "user_text": "Name one tradeoff compared to a balanced tree.",
+    "assistant_text": "Hash tables are faster on average but **don't maintain order**, so unlike a balanced tree, you can't efficiently retrieve keys in sorted sequence or do range queries (e.g., \"find all keys between A and Z\")."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "List two common pitfalls.",
+    "assistant_text": "1. **Poor hash functions** \u2013 causing many collisions, degrading performance from O(1) to O(n).\n2. **Resizing overhead** \u2013 when the table fills up, rehashing all keys into a larger array causes a sudden, costly spike in time."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "State the average time complexity for lookup.",
+    "assistant_text": "**O(1)** \u2014 constant time on average."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "What is a good alternative when memory is tight?",
+    "assistant_text": "A **binary search tree (BST)** \u2014 it uses memory only for actual elements with no extra bucket overhead, at the cost of O(log n) lookups instead of O(1)."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide one short analogy.",
+    "assistant_text": "A hash table is like a **filing cabinet with labeled folders** \u2014 instead of searching every folder, you go directly to the right one based on the label."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "Describe when I should not use it.",
+    "assistant_text": "Avoid a hash table when you need **sorted or ordered data**, **range queries**, **predictable worst-case performance**, or when **memory is severely limited**."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one reason it can be faster than a list.",
+    "assistant_text": "A hash table jumps **directly to the value** via its key, while a list must scan elements **one by one** until it finds a match \u2014 O(1) vs O(n)."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a one-line recap.",
+    "assistant_text": "A hash table is a fast key-value store offering O(1) average lookups, best used when you need quick access by key but don't require ordered data."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in a short bullet list.",
+    "assistant_text": "- Stores **key-value pairs**\n- Uses a **hash function** for direct access\n- **O(1)** average lookup, insert, delete\n- Best for **fast lookups**, caching, counting\n- Avoid when **ordering or range queries** are needed"
+  }
+]

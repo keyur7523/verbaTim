@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Explain what a hash table is and when to use it.",
+    "assistant_text": "# Hash Tables\n\n## What Is a Hash Table?\n\nA hash table (also called a hash map) is a data structure that stores **key-value pairs** and provides fast lookup, insertion, and deletion.\n\nIt works by using a **hash function** to convert a key into an index, which determines where the value is stored in an underlying array.\n\n```\nKey \u2192 Hash Function \u2192 Index \u2192 Value\n\n\"name\" \u2192 hash() \u2192 4 \u2192 \"Alice\"\n\"age\"  \u2192 hash() \u2192 7 \u2192 30\n```\n\n---\n\n## How It Works\n\n1. **Hash Function** \u2014 Takes a key and computes an integer index\n2. **Buckets** \u2014 The underlying array slots where values are stored\n3. **Collision Handling** \u2014 When two keys map to the same index:\n   - **Chaining** \u2014 Store multiple items in a linked list at that index\n   - **Open Addressing** \u2014 Probe for the next available slot\n\n```\nIndex | Value\n------|-----------\n  0   | []\n  1   | [(\"age\", 30)]\n  2   | []\n  3   | []\n  4   | [(\"name\", \"Alice\")]\n  5   | []\n```\n\n---\n\n## Time Complexity\n\n| Operation | Average | Worst Case |\n|-----------|---------|------------|\n| Lookup    | O(1)    | O(n)       |\n| Insert    | O(1)    | O(n)       |\n| Delete    | O(1)    | O(n)       |\n\n> Worst case occurs when many collisions happen (poor hash function or high load factor)\n\n---\n\n## When to Use a Hash Table\n\n### \u2705 Good Use Cases\n\n| Scenario | Example |\n|----------|---------|\n| **Fast lookups by key** | User records by ID |\n| **Counting/frequency** | Word count in a document |\n| **Caching** | Memoization, web caches |\n| **Deduplication** | Tracking visited URLs |\n| **Grouping/indexing** | Grouping items by category |\n| **Set membership** | \"Have I seen this before?\" |\n\n### \u274c When NOT to Use One\n\n| Scenario | Better Alternative |\n|----------|--------------------|\n| Need sorted data | Balanced BST, sorted array |\n| Need range queries | Tree, sorted array |\n| Keys have natural order | Array or list |\n| Memory is very constrained | Arrays (hash tables have overhead) |\n| Need predictable worst-case | Trees (O(log n) guaranteed) |\n\n---\n\n## Quick Code Example (Python)\n\n```python\n# Python's dict is a hash table\nphone_book = {}\n\n# Insert\nphone_book[\"Alice\"] = \"555-1234\"\nphone_book[\"Bob\"]   = \"555-5678\"\n\n# Lookup \u2014 O(1)\nprint(phone_book[\"Alice\"])  # \"555-1234\"\n\n# Check membership \u2014 O(1)\nif \"Bob\" in phone_book:\n    print(\"Found Bob\")\n\n# Delete \u2014 O(1)\ndel phone_book[\"Bob\"]\n```\n\n---\n\n## Key Takeaway\n\n> Use a hash table when you need **fast O(1) access to data by a unique key** and don't need the data to be ordered.\n\nIt's one of the most commonly used data structures, underlying Python dicts, JavaScript objects, Java HashMaps, and database indexes."
+  },
+  {
+    "turn_index": 1,
+    "user_text": "Summarize the key benefit in one sentence.",
+    "assistant_text": "Hash tables provide **O(1) average-case lookup, insertion, and deletion** by mapping keys directly to memory locations via a hash function."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give one practical example in everyday apps.",
+    "assistant_text": "A web browser uses a hash table to store your **browsing history**, instantly checking if a URL has been visited before (shown by the purple link color) without scanning through every page you've ever visited."
+  },
+  {
+    "turn_index": 3,
+    "user_text": "Name one tradeoff compared to a balanced tree.",
+    "assistant_text": "Hash tables offer faster **O(1) average lookup**, but unlike a balanced tree they **don't maintain order**, so you can't efficiently do range queries like \"find all keys between A and Z.\""
+  },
+  {
+    "turn_index": 4,
+    "user_text": "List two common pitfalls.",
+    "assistant_text": "1. **Poor hash functions** \u2014 A bad hash function causes many collisions, degrading performance from O(1) to O(n) as all keys pile into the same bucket.\n\n2. **High load factor** \u2014 Letting the table get too full (too many entries relative to bucket count) increases collisions, so failing to resize/rehash at the right time kills performance."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "State the average time complexity for lookup.",
+    "assistant_text": "**O(1)** \u2014 constant time on average."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "What is a good alternative when memory is tight?",
+    "assistant_text": "A **sorted array with binary search** is a good alternative \u2014 it uses minimal memory with no hash table overhead, and still provides efficient **O(log n)** lookup."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide one short analogy.",
+    "assistant_text": "A hash table is like a **filing cabinet with labeled folders** \u2014 instead of searching every folder, you go directly to the exact folder you need based on its label."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "Describe when I should not use it.",
+    "assistant_text": "Avoid a hash table when you need **ordered or sorted data**, such as finding the minimum/maximum, doing range queries, or iterating keys in sorted order \u2014 use a balanced tree or sorted array instead."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one reason it can be faster than a list.",
+    "assistant_text": "A hash table jumps **directly to the value** using the key, while a list must scan **one by one from the start**, making lookup O(1) vs O(n)."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a one-line recap.",
+    "assistant_text": "A hash table is the go-to data structure for **fast key-value lookups in O(1) time**, trading ordered data and extra memory for unmatched speed."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in a short bullet list.",
+    "assistant_text": "- Stores **key-value pairs**\n- Uses a **hash function** for direct access\n- **O(1)** average lookup, insert, delete\n- Best for **fast lookups, caching, counting**\n- Avoid when you need **sorted or ordered data**"
+  }
+]

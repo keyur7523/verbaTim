@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Plan a 1-day migration from SVN to Git for a small repo.",
+    "assistant_text": "# 1-Day SVN \u2192 Git Migration Plan\n\n## Prerequisites (Night Before)\n- Install `git-svn` or `svn2git`\n- Identify SVN repo size/history depth\n- Create author mapping file (`authors.txt`)\n\n```\njsmith = John Smith <jsmith@company.com>\nmjones = Mary Jones <mjones@company.com>\n```\n\n---\n\n## Morning (2\u20133 hrs): Prep & Clone\n\n### 1. Clone SVN repo\n```bash\n# Standard trunk/branches/tags layout\ngit svn clone https://svn.example.com/repo \\\n  --stdlayout \\\n  --authors-file=authors.txt \\\n  --no-metadata \\\n  -s myrepo\n\ncd myrepo\n```\n\n### 2. Convert SVN branches/tags to Git\n```bash\n# Convert remote SVN branches to local Git branches\nfor branch in $(git branch -r | grep -v tags | grep -v trunk); do\n  git branch ${branch##*/} $branch\ndone\n\n# Convert SVN tags to Git tags\nfor tag in $(git branch -r | grep tags); do\n  git tag ${tag##*/tags/} $tag\ndone\n\n# Clean up remote tracking refs\ngit branch -r | xargs git branch -dr\n```\n\n---\n\n## Midday (1\u20132 hrs): Verify & Clean\n\n### 3. Verify history\n```bash\ngit log --oneline -20\ngit branch -a\ngit tag\n```\n\n### 4. Clean up\n- Remove `.gitignore`-worthy items (convert `.svnignore` \u2192 `.gitignore`)\n- Remove any large/binary files if needed (`git filter-repo`)\n\n```bash\nsvn propget svn:ignore . > .gitignore\n```\n\n---\n\n## Afternoon (2\u20133 hrs): Push & Validate\n\n### 5. Push to remote (GitHub/GitLab/Bitbucket)\n```bash\ngit remote add origin git@github.com:org/myrepo.git\ngit push -u origin main\ngit push --all\ngit push --tags\n```\n\n### 6. Validate\n- [ ] Commit count matches\n- [ ] All branches present\n- [ ] All tags present\n- [ ] Authors mapped correctly\n- [ ] `.gitignore` working\n\n---\n\n## End of Day: Cutover\n\n| Step | Action |\n|------|--------|\n| Lock SVN | Set repo to read-only |\n| Notify team | Send Git repo URL + clone instructions |\n| Update CI/CD | Point pipelines to new Git remote |\n| Archive SVN | Keep read-only for 30 days |\n\n---\n\n## Team Quickstart (send to devs)\n```bash\ngit clone git@github.com:org/myrepo.git\ncd myrepo\ngit checkout -b feature/my-feature  # instead of svn branch\n```\n\n---\n\n**Total time estimate: ~6\u20138 hours** for a small repo with clean history."
+  },
+  {
+    "turn_index": 1,
+    "user_text": "List the top 3 risks.",
+    "assistant_text": "## Top 3 Migration Risks\n\n### 1. \ud83d\uddfa\ufe0f Incomplete Author Mapping\n**Risk:** Commits with unmapped authors cause the migration to **fail or produce unknown users** in history.\n**Mitigation:** Run `svn log | grep \"^r\" | awk '{print $3}' | sort -u` to extract all authors *before* migrating and verify every one is in `authors.txt`.\n\n---\n\n### 2. \ud83d\udce6 Large/Binary Files in History\n**Risk:** Bloated Git repo that's **slow to clone** or exceeds platform limits (GitHub's 100MB file limit).\n**Mitigation:** Audit with `git count-objects -vH` post-clone; use `git filter-repo` to strip large files before pushing.\n\n---\n\n### 3. \ud83d\udd00 Branch & Tag Corruption\n**Risk:** Non-standard SVN layouts (e.g., nested branches, partial copies) convert **incorrectly or are silently dropped**.\n**Mitigation:** Compare `svn ls ^/branches` and `svn ls ^/tags` counts against Git output before cutover."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give a short checklist.",
+    "assistant_text": "## Pre-Cutover Checklist\n\n- [ ] All SVN authors mapped in `authors.txt`\n- [ ] Commit count matches SVN vs Git\n- [ ] All branches present and named correctly\n- [ ] All tags present and named correctly\n- [ ] No large/binary files exceeding limits\n- [ ] `.gitignore` converted from `svn:ignore`\n- [ ] CI/CD pipeline updated to Git remote\n- [ ] SVN repo set to read-only\n- [ ] Team notified with new repo URL"
+  },
+  {
+    "turn_index": 3,
+    "user_text": "State one rollback option.",
+    "assistant_text": "**Keep SVN read-only for 30 days post-migration.**\n\nIf anything breaks, developers can revert to SVN temporarily while issues are resolved \u2014 since no new commits were made to it, the history remains intact and authoritative."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "Name one prerequisite.",
+    "assistant_text": "**An author mapping file (`authors.txt`)** \u2014 required before cloning, as `git svn` will abort if it encounters an SVN username with no corresponding Git identity."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "What is the fastest validation step?",
+    "assistant_text": "**Compare commit counts:**\n\n```bash\n# SVN\nsvn log --quiet | grep \"^r\" | wc -l\n\n# Git\ngit rev-list --count HEAD\n```\nNumbers should match \u2014 takes under 30 seconds and immediately flags a broken migration."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a one-line timeline.",
+    "assistant_text": "**Morning: clone & convert \u2192 Midday: clean & verify \u2192 Afternoon: push & cutover.**"
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide two tools you might use.",
+    "assistant_text": "1. **`git svn`** \u2014 built into Git; clones SVN history and converts branches/tags.\n2. **`git filter-repo`** \u2014 cleans up large files or unwanted history before pushing."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "State who should approve the final cutover.",
+    "assistant_text": "**The team lead or repository owner** \u2014 they confirm history is intact, CI/CD is updated, and the team is notified before SVN is locked."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one short communication tip.",
+    "assistant_text": "Send a single email with the new Git clone URL, the cutover date/time, and a one-line clone command \u2014 before SVN is locked."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a final recap.",
+    "assistant_text": "## Final Recap\n\n| Phase | Action |\n|-------|--------|\n| **Prep** | Author mapping, tool install |\n| **Clone** | `git svn clone` with `--stdlayout` |\n| **Clean** | Convert `.gitignore`, remove large files |\n| **Verify** | Match commit counts, branches, tags |\n| **Push** | Push all branches and tags to remote |\n| **Cutover** | Lock SVN, notify team, update CI/CD |\n\n**Key tools:** `git svn`, `git filter-repo`\n**Top risk:** Incomplete author mapping\n**Approver:** Team lead\n**Rollback:** Keep SVN read-only for 30 days\n\n> Total time: ~6\u20138 hours for a small repo."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in short bullets only.",
+    "assistant_text": "- Clone with `git svn`\n- Map all authors first\n- Verify commit counts match\n- Clean large files with `git filter-repo`\n- Push branches and tags\n- Lock SVN, notify team\n- Team lead approves cutover\n- Keep SVN read-only 30 days as rollback"
+  }
+]

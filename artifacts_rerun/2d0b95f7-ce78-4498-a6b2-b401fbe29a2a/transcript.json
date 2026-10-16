@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Plan a 1-day migration from SVN to Git for a small repo.",
+    "assistant_text": "## SVN \u2192 Git Migration (1-Day Plan)\n\n**Prerequisites:** Git, `git-svn`, and admin access to both repos.\n\n---\n\n### Morning (2\u20133 hrs): Prep\n\n- [ ] **Audit SVN repo** \u2014 check size, branches, tags, externals\n- [ ] **Create authors file** \u2014 map SVN usernames to Git identities\n  ```\n  jsmith = John Smith <jsmith@example.com>\n  ```\n- [ ] **Provision bare Git repo** (GitHub/GitLab/Gitea/self-hosted)\n- [ ] **Notify team** \u2014 freeze SVN commits during migration window\n\n---\n\n### Midday (2\u20133 hrs): Clone & Convert\n\n```bash\n# Standard trunk/branches/tags layout\ngit svn clone https://svn.example.com/repo \\\n  --stdlayout \\\n  --authors-file=authors.txt \\\n  --no-metadata \\   # omit if you want git-svn-id in commits\n  -s my-repo\n\ncd my-repo\n\n# Convert SVN tags to real Git tags\ngit for-each-ref refs/remotes/tags | cut -d / -f 5- | while read tag; do\n  git tag \"$tag\" \"refs/remotes/tags/$tag\"\n  git branch -r -d \"tags/$tag\"\ndone\n\n# Convert SVN branches to local Git branches\ngit for-each-ref refs/remotes | grep -v tags | cut -d / -f 4- | while read branch; do\n  git checkout -b \"$branch\" \"refs/remotes/$branch\"\ndone\n```\n\n---\n\n### Early Afternoon (1 hr): Verify\n\n- [ ] Commit count matches (`git log --oneline | wc -l`)\n- [ ] Branches and tags present (`git branch -a`, `git tag`)\n- [ ] Spot-check 3\u20135 commits for author, message, diff accuracy\n- [ ] Check `svn:externals` \u2014 **convert manually** to Git submodules or subtrees\n\n---\n\n### Late Afternoon (1 hr): Push & Cut Over\n\n```bash\ngit remote add origin git@github.com:org/my-repo.git\ngit push origin --all\ngit push origin --tags\n```\n\n- [ ] Set default branch (`main`)\n- [ ] Configure branch protection rules\n- [ ] Update CI/CD pipelines to point to Git\n- [ ] **Make SVN repo read-only** (or add commit hook blocking new commits)\n\n---\n\n### End of Day (30 min): Team Handoff\n\n- [ ] Share Git clone instructions with team\n- [ ] Brief on Git workflow (especially if team is SVN-heavy)\n- [ ] Archive SVN repo URL in README or wiki\n\n---\n\n### Key Risks\n\n| Risk | Mitigation |\n|---|---|\n| Missing authors | Pre-validate authors file before clone |\n| `svn:externals` | Manually convert; don't skip |\n| Large binary history | Consider `git-lfs` or `--no-metadata` + shallow |\n| Long clone time | Run overnight if repo is large |"
+  },
+  {
+    "turn_index": 1,
+    "user_text": "List the top 3 risks.",
+    "assistant_text": "From the migration plan:\n\n1. **`svn:externals`** \u2014 no automatic conversion; breaks builds if missed\n2. **Missing authors** \u2014 clone fails or produces malformed commits\n3. **Long clone time** \u2014 large/old repos can take hours, blowing the 1-day window"
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give a short checklist.",
+    "assistant_text": "**Migration Risk Checklist**\n\n- [ ] Authors file complete and validated before clone\n- [ ] All `svn:externals` identified and conversion plan ready\n- [ ] Repo size estimated; clone time acceptable within window"
+  },
+  {
+    "turn_index": 3,
+    "user_text": "State one rollback option.",
+    "assistant_text": "Keep SVN read-only (not deleted) \u2014 revert CI/CD pointers back to it if Git migration fails."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "Name one prerequisite.",
+    "assistant_text": "`git-svn` installed on the machine running the migration."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "What is the fastest validation step?",
+    "assistant_text": "Run `git log --oneline | wc -l` and compare against SVN revision count."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a one-line timeline.",
+    "assistant_text": "Prep \u2192 Clone & Convert \u2192 Verify \u2192 Push & Cut Over \u2192 Team Handoff"
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide two tools you might use.",
+    "assistant_text": "`git-svn` (conversion) and GitHub/GitLab (remote hosting)."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "State who should approve the final cutover.",
+    "assistant_text": "The project or team lead with authority over CI/CD and repository access."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one short communication tip.",
+    "assistant_text": "Announce a clear SVN freeze time to the whole team before starting."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a final recap.",
+    "assistant_text": "**1-Day SVN \u2192 Git Migration Recap**\n\n- **Prereq:** `git-svn` installed, authors file ready\n- **Steps:** Prep \u2192 Clone \u2192 Verify \u2192 Push \u2192 Cut Over\n- **Top risks:** Missing authors, `svn:externals`, long clone time\n- **Validation:** Compare commit counts\n- **Rollback:** Keep SVN read-only\n- **Approval:** Team/project lead\n- **Comms:** Announce SVN freeze in advance"
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in short bullets only.",
+    "assistant_text": "- Prep authors file and install `git-svn`\n- Clone, convert branches/tags, verify commit count\n- Push to Git, make SVN read-only\n- Team lead approves cutover\n- Announce freeze time early"
+  }
+]

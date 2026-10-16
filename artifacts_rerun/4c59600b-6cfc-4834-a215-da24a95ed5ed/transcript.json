@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Plan a 1-day migration from SVN to Git for a small repo.",
+    "assistant_text": "## SVN \u2192 Git Migration (1-Day Plan)\n\n**Prerequisites:** Git, `git-svn`, and admin access to both systems.\n\n---\n\n### Morning (3\u20134 hrs)\n\n**1. Audit the SVN repo** (~30 min)\n- Check size, branches, tags, externals (`svn info`, `svn list`)\n- Identify any binary blobs or sensitive history to exclude\n\n**2. Create authors mapping file** (~30 min)\n```\njdoe = John Doe <jdoe@company.com>\n```\nRun: `svn log --xml | grep author | sort -u` to extract all authors.\n\n**3. Clone SVN \u2192 Git** (~1\u20132 hrs depending on history size)\n```bash\ngit svn clone https://svn.example.com/repo \\\n  --stdlayout \\\n  --authors-file=authors.txt \\\n  --no-metadata \\\n  -s my-repo\n```\n\n**4. Convert tags/branches**\n```bash\n# Convert SVN tags to real Git tags\ngit for-each-ref refs/remotes/tags | while read hash type ref; do\n  tag=\"${ref##*/}\"\n  git tag \"$tag\" \"$hash\"\n  git branch -r -d \"tags/$tag\"\ndone\n```\n\n---\n\n### Midday (1\u20132 hrs)\n\n**5. Clean up**\n- Remove `trunk` remote, rename to `main`: `git branch -m trunk main`\n- Handle externals manually (convert to submodules or vendor)\n- Run `git gc --aggressive` to compress\n\n**6. Push to new remote**\n```bash\ngit remote add origin git@github.com:org/repo.git\ngit push origin --all\ngit push origin --tags\n```\n\n---\n\n### Afternoon (2\u20133 hrs)\n\n**7. Validate**\n- [ ] Commit count matches (`git log --oneline | wc -l`)\n- [ ] Branches and tags present\n- [ ] Spot-check key file history (`git log -- path/to/file`)\n\n**8. Update CI/CD** \u2014 point pipelines to new Git remote\n\n**9. Notify team + lock SVN repo** (set to read-only)\n\n**10. Update local dev environments**\n```bash\ngit clone git@github.com:org/repo.git\n```\n\n---\n\n### Risk Flags\n| Issue | Mitigation |\n|---|---|\n| `svn:externals` | Convert to submodules or inline |\n| Large binaries | Use Git LFS before pushing |\n| Missing authors | Migration fails \u2014 audit first |\n| Merge history | `git svn` linearizes it \u2014 acceptable for most teams |\n\n---\n\n**Total time:** ~6\u20138 hrs. Run the clone step first \u2014 it dominates the timeline."
+  },
+  {
+    "turn_index": 1,
+    "user_text": "List the top 3 risks.",
+    "assistant_text": "From the plan above:\n\n1. **Missing authors** \u2014 migration aborts if any SVN author lacks a mapping entry. Fix the file completely before cloning.\n2. **SVN externals** \u2014 no automatic equivalent in Git; requires manual conversion to submodules or vendored code, which can block team workflows.\n3. **Large binary history** \u2014 bloats the Git repo permanently unless Git LFS is configured *before* the initial push. Retroactive fixes are painful."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give a short checklist.",
+    "assistant_text": "**SVN \u2192 Git Migration Checklist**\n\n- [ ] All SVN authors mapped\n- [ ] Externals strategy decided (submodules/vendor)\n- [ ] Git LFS configured for binaries\n- [ ] `git svn clone` completed without errors\n- [ ] Tags/branches converted and verified\n- [ ] CI/CD updated to new remote\n- [ ] SVN repo locked (read-only)\n- [ ] Team notified and local envs updated"
+  },
+  {
+    "turn_index": 3,
+    "user_text": "State one rollback option.",
+    "assistant_text": "Keep SVN read-only (not deleted) for 1\u20132 weeks \u2014 if Git adoption fails, teams can resume committing to SVN with zero data loss."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "Name one prerequisite.",
+    "assistant_text": "An authors mapping file covering every SVN committer."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "What is the fastest validation step?",
+    "assistant_text": "`git log --oneline | wc -l` \u2014 compare commit count against SVN's revision count."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a one-line timeline.",
+    "assistant_text": "Audit \u2192 Clone \u2192 Clean \u2192 Push \u2192 Validate \u2192 Lock SVN \u2014 all within one business day."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide two tools you might use.",
+    "assistant_text": "`git-svn` (migration) and `git lfs` (binary handling)."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "State who should approve the final cutover.",
+    "assistant_text": "The repo owner or engineering lead responsible for CI/CD and team workflows."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one short communication tip.",
+    "assistant_text": "Send a single team message with the new remote URL and clone command before locking SVN."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a final recap.",
+    "assistant_text": "Map authors \u2192 clone with `git-svn` \u2192 clean branches/tags \u2192 handle binaries with LFS \u2192 push \u2192 validate commit count \u2192 lock SVN \u2192 notify team. One day, one shot \u2014 keep SVN read-only as fallback."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in short bullets only.",
+    "assistant_text": "- Map all SVN authors\n- Clone via `git-svn`\n- Convert branches/tags\n- Handle binaries with LFS\n- Push to new remote\n- Validate commit count\n- Lock SVN (keep as fallback)\n- Notify team with new URL"
+  }
+]

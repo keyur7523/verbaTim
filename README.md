@@ -15,7 +15,7 @@ Verbosity drift is the tendency for responses to grow longer across turns even w
 
 I treat verbosity as a **product-quality invariant with safety implications**, not a stylistic preference. Excess verbosity increases hallucination risk, degrades semantic precision, inflates cost and latency, and expands policy surface area over time.
 
-This repo evaluates the behavior, diagnoses failure modes, and demonstrates a prompt-level intervention that stabilizes verbosity across turns without truncation or hard clipping.
+This repo evaluates the behavior, diagnoses failure modes, and tests a prompt-level intervention ("verbatim") against simpler controls, without truncation or hard clipping. In a pre-registered 200-run test it made replies shortest, but it did not stabilize length across turns (see Results).
 
 ---
 
@@ -83,32 +83,38 @@ Safety-adjacent evaluators are regex/keyword proxies, not detectors: an instruct
 
 ---
 
-## Results — status: invalidated, rerun pending
+## Results
 
-An audit of the original artifacts (October 2026) found that the published
-summary pooled three kinds of runs:
+Pre-registered rerun on `claude-sonnet-4-6` (2026-10-16): 5 intents × 4 conditions × 10 repeats = 200 runs,
+all completed, none excluded. The analysis plan was committed before the rerun started.
 
-- 60 runs from the local backend's mock generator, which echoes the prompt
-  instead of calling a model (all "passed");
-- 80 runs on claude-3-5-sonnet-20241022 that failed with no output;
-- 24 real runs on claude-sonnet-4-20250514 (baseline 10, budgeted 7,
-  naive 5, verbatim 2). 22 of them failed the verbosity check; the other 2
-  completed without a verbosity evaluation.
+Follow-up turns 1–11, each condition compared turn by turn with baseline (95% bootstrap CIs):
 
-The earlier table and deltas are withdrawn. The real runs are too few and
-too unbalanced to support a conclusion, so **the verbosity-drift hypothesis
-is currently untested**. The aggregation now excludes failed, mock, and
-unevaluated runs and reports results per model with sample sizes and standard
-deviations; a balanced rerun (4 conditions × 4 intents × 10 runs, one model)
-is planned.
+| Condition | n | Follow-up length vs baseline | Ratio drift, % per turn | Pass rate (turns 1–11) |
+|---|---:|---:|---:|---:|
+| baseline | 50 | 1.00 | 0 | 12/50 |
+| naive | 50 | 0.65 [0.62, 0.69] | +2.76 [+1.90, +3.64] | 27/50 |
+| budgeted | 50 | 0.65 [0.63, 0.68] | +1.73 [+0.85, +2.70] | 29/50 |
+| verbatim | 50 | 0.59 [0.57, 0.61] | +3.65 [+2.96, +4.31] | 20/50 |
 
-- Committed artifacts: the 24 real claude-sonnet-4-20250514 runs only. Mock and failed runs are kept locally in the git-ignored `artifacts_excluded/`.
-- Current summary (22 evaluated real runs, n and SD per cell): `artifacts/summary.csv`
-- Per-model deltas against baseline, with sample sizes: `artifacts/summary_deltas.json`
+- **Verbatim makes replies shortest** (0.59× baseline on follow-ups, 0.38× on the opening answer).
+- **Its relative length rises across turns** (+3.65% per turn, the pre-registered primary comparison), mostly in
+  the debugging and planning intents.
+- **The verbosity-drift hypothesis is not supported on this model:** baseline follow-ups get *shorter* across
+  turns (−6.1 tokens per turn). The rising ratio most likely reflects the conditions converging on a shrinking
+  baseline, not a constraint decaying, and turn position is confounded with question content because every run
+  asks the same follow-ups in the same order.
 
-A detailed analysis, including failure modes and tradeoffs, is documented in:
+Full results, caveats, and the analysis plan: `docs/case-study.md`. Artifacts: `artifacts_rerun/`
+(`primary_comparison.json`, `summary.csv`); reproduce the comparison with
+`python -m verbatim.analysis.primary_comparison --artifacts-dir artifacts_rerun`.
 
-- `docs/case-study.md`
+### History: the withdrawn original results
+
+An audit (October 2026) found that the original published summary pooled 60 mock-generator runs (all
+"passed"), 80 failed runs, and 24 real `claude-sonnet-4-20250514` runs, grouped by condition only. That table
+was withdrawn. The 24 real runs are kept in `artifacts/` (summary in `artifacts/summary.csv`); mock and failed
+runs are kept locally in the git-ignored `artifacts_excluded/`.
 
 ---
 

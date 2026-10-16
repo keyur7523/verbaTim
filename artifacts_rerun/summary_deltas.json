@@ -1,0 +1,44 @@
+[
+  {
+    "model": "claude-sonnet-4-6",
+    "length_unit": "provider_tokens",
+    "baseline": "baseline",
+    "candidate": "budgeted",
+    "n_baseline": 50,
+    "n_candidate": 50,
+    "deltas": {
+      "mean_tokens_delta": -89.3033333333334,
+      "drift_slope_delta": 30.437622377622382,
+      "pass_rate_delta": 0.0,
+      "growth_ratio_delta": 0.2451566198531114
+    }
+  },
+  {
+    "model": "claude-sonnet-4-6",
+    "length_unit": "provider_tokens",
+    "baseline": "baseline",
+    "candidate": "naive",
+    "n_baseline": 50,
+    "n_candidate": 50,
+    "deltas": {
+      "mean_tokens_delta": -66.93500000000004,
+      "drift_slope_delta": 20.7858041958042,
+      "pass_rate_delta": 0.0,
+      "growth_ratio_delta": 0.08295744860062437
+    }
+  },
+  {
+    "model": "claude-sonnet-4-6",
+    "length_unit": "provider_tokens",
+    "baseline": "baseline",
+    "candidate": "verbatim",
+    "n_baseline": 50,
+    "n_candidate": 50,
+    "deltas": {
+      "mean_tokens_delta": -78.8866666666667,
+      "drift_slope_delta": 24.68783216783217,
+      "pass_rate_delta": 0.0,
+      "growth_ratio_delta": 0.1161193353420912
+    }
+  }
+]

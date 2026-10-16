@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Plan a 1-day migration from SVN to Git for a small repo.",
+    "assistant_text": "# 1-Day SVN \u2192 Git Migration Plan\n\n## Prerequisites (Night Before)\n- Install `git-svn` or `svn2git`\n- Inventory the repo: branches, tags, size, externals\n- Create author mapping file (`authors.txt`)\n\n```\njsmith = John Smith <jsmith@company.com>\nmjones = Mary Jones <mjones@company.com>\n```\n\n---\n\n## Schedule\n\n### Morning (2\u20133 hrs) \u2014 Clone & Convert\n```bash\n# Option A: git-svn\ngit svn clone https://svn.example.com/repo \\\n  --authors-file=authors.txt \\\n  --stdlayout \\\n  --no-metadata \\\n  -s myrepo\n\n# Option B: svn2git (cleaner tags/branches)\nsvn2git https://svn.example.com/repo \\\n  --authors authors.txt \\\n  --stdlayout\n```\n\n**Verify:**\n- Commit count matches SVN\n- Branches and tags present\n- History looks correct (`git log --oneline`)\n\n---\n\n### Midday (1\u20132 hrs) \u2014 Clean Up\n```bash\n# Convert svn:externals \u2192 git submodules (if needed)\n# Remove large/unwanted files\ngit filter-repo --path secrets/ --invert-paths\n\n# Verify .gitignore (convert svn:ignore)\ngit svn show-ignore > .gitignore\ngit add .gitignore && git commit -m \"Add .gitignore\"\n```\n\n---\n\n### Early Afternoon (1 hr) \u2014 Push to Remote\n```bash\n# Add remote (GitHub/GitLab/Bitbucket)\ngit remote add origin git@github.com:org/myrepo.git\n\n# Push all branches and tags\ngit push -u origin --all\ngit push origin --tags\n```\n\n---\n\n### Late Afternoon (1\u20132 hrs) \u2014 Team Cutover\n| Task | Action |\n|------|--------|\n| Lock SVN repo | Set to read-only |\n| Notify team | Send Git clone URL + cheat sheet |\n| Update CI/CD | Point pipelines to new Git remote |\n| Update docs | README, wikis, ticket links |\n| Test a PR/MR | Validate workflow end-to-end |\n\n---\n\n### End of Day \u2014 Validate & Close Out\n- [ ] All team members can clone successfully\n- [ ] CI/CD pipeline passes\n- [ ] SVN marked read-only with redirect notice\n- [ ] Old SVN URL documented for reference\n\n---\n\n## Key Risks & Mitigations\n| Risk | Mitigation |\n|------|------------|\n| Missing authors | Pre-build complete `authors.txt` |\n| SVN externals | Convert to submodules or vendor manually |\n| Large binary files | Use Git LFS before pushing |\n| Long history/large repo | Run clone overnight if needed |"
+  },
+  {
+    "turn_index": 1,
+    "user_text": "List the top 3 risks.",
+    "assistant_text": "Based on the migration plan above:\n\n1. **SVN Externals** \u2014 Can break builds if not converted to submodules or vendored before cutover\n2. **Incomplete Author Mapping** \u2014 Missing entries halt the conversion mid-run; requires a complete `authors.txt` upfront\n3. **Large Binary Files** \u2014 Bloat repo size and slow clones; need Git LFS configured *before* pushing to remote"
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give a short checklist.",
+    "assistant_text": "## Migration Checklist\n\n- [ ] Build complete `authors.txt`\n- [ ] Audit repo for externals and binaries\n- [ ] Configure Git LFS if needed\n- [ ] Run and verify conversion locally\n- [ ] Lock SVN repo (read-only)\n- [ ] Push to remote (branches + tags)\n- [ ] Update CI/CD pipelines\n- [ ] Confirm all team members can clone"
+  },
+  {
+    "turn_index": 3,
+    "user_text": "State one rollback option.",
+    "assistant_text": "Keep SVN read-only (not deleted) for 1\u20132 weeks so the team can revert to it if Git adoption fails."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "Name one prerequisite.",
+    "assistant_text": "A complete `authors.txt` mapping every SVN username to a Git name and email."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "What is the fastest validation step?",
+    "assistant_text": "Run `git log --oneline` and confirm the commit count matches SVN."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a one-line timeline.",
+    "assistant_text": "Convert morning \u2192 clean/push midday \u2192 team cutover afternoon \u2192 validate by end of day."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide two tools you might use.",
+    "assistant_text": "`git-svn` and `svn2git`."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "State who should approve the final cutover.",
+    "assistant_text": "The team lead or project owner."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one short communication tip.",
+    "assistant_text": "Send the new Git clone URL and a one-page cheat sheet to the team before cutover."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a final recap.",
+    "assistant_text": "Convert the repo using `git-svn` or `svn2git`, clean up externals and binaries, push to remote, lock SVN, update CI/CD, and confirm the team can clone \u2014 all in one day with the team lead approving final cutover."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in short bullets only.",
+    "assistant_text": "- Convert with `git-svn` or `svn2git`\n- Clean up externals and binaries\n- Push branches and tags to remote\n- Lock SVN read-only\n- Update CI/CD pipelines\n- Team lead approves cutover\n- Confirm all team members can clone"
+  }
+]

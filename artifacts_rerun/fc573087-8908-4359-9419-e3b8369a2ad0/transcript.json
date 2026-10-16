@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Compare REST and GraphQL for a small internal API.",
+    "assistant_text": "# REST vs GraphQL for a Small Internal API\n\n## Quick Summary\n\n| Aspect | REST | GraphQL |\n|--------|------|---------|\n| Learning curve | Low | Medium |\n| Setup complexity | Low | Medium-High |\n| Flexibility | Moderate | High |\n| Tooling maturity | Excellent | Good |\n| Best fit | Simple, stable resources | Complex, varying data needs |\n\n---\n\n## REST\n\n### How It Works\n```\nGET    /users          \u2192 list users\nGET    /users/42       \u2192 get user\nPOST   /users          \u2192 create user\nPUT    /users/42       \u2192 update user\nDELETE /users/42       \u2192 delete user\n```\n\n### Strengths\n- **Simple to understand** \u2014 HTTP verbs + URLs are intuitive\n- **Easy to test** \u2014 curl, Postman, browser work out of the box\n- **HTTP caching** works naturally (GET requests cache well)\n- **Widely understood** \u2014 any new team member knows it immediately\n- **Less boilerplate** \u2014 no schema definition required upfront\n\n### Weaknesses\n- **Over-fetching** \u2014 endpoint returns fields you don't need\n- **Under-fetching** \u2014 may need multiple requests for related data\n- **Versioning pain** \u2014 `/v1/`, `/v2/` sprawl over time\n\n---\n\n## GraphQL\n\n### How It Works\n```graphql\n# Single endpoint: POST /graphql\n# Client specifies exactly what it needs\n\nquery {\n  user(id: 42) {\n    name\n    email\n    posts {\n      title\n    }\n  }\n}\n```\n\n### Strengths\n- **Fetch exactly what you need** \u2014 no over/under-fetching\n- **Single endpoint** \u2014 no URL management\n- **Self-documenting** \u2014 schema is the contract\n- **Strongly typed** \u2014 catches errors at schema level\n- **Evolves without versioning** \u2014 add fields, deprecate old ones\n\n### Weaknesses\n- **More setup** \u2014 schema, resolvers, and a GraphQL server needed\n- **Harder to cache** \u2014 POST requests don't cache like GET\n- **Overkill for simple data** \u2014 adds complexity without benefit\n- **N+1 query problem** \u2014 requires DataLoader or similar to solve\n- **Error handling** \u2014 always returns HTTP 200, errors are in the body\n\n---\n\n## Side-by-Side Example\n\n**Scenario:** Fetch a user and their recent orders\n\n### REST (2 requests)\n```bash\nGET /users/42\nGET /users/42/orders?limit=5\n```\n```json\n// Response 1 - includes fields you may not need\n{ \"id\": 42, \"name\": \"Alice\", \"email\": \"...\", \"role\": \"...\", \"createdAt\": \"...\" }\n\n// Response 2\n{ \"orders\": [{ \"id\": 1, \"total\": 99.99, \"status\": \"shipped\", \"items\": [...] }] }\n```\n\n### GraphQL (1 request)\n```graphql\nquery {\n  user(id: 42) {\n    name\n    email\n    orders(limit: 5) {\n      total\n      status\n    }\n  }\n}\n```\n```json\n// Exactly what you asked for, nothing more\n{ \"data\": { \"user\": { \"name\": \"Alice\", \"email\": \"...\",\n    \"orders\": [{ \"total\": 99.99, \"status\": \"shipped\" }] }}}\n```\n\n---\n\n## Decision Guide for a Small Internal API\n\n```\nIs your team already familiar with GraphQL?\n\u251c\u2500\u2500 No \u2192 Start with REST (lower ramp-up cost)\n\u2514\u2500\u2500 Yes \u2192 GraphQL is viable\n\nDo you have many different clients with varying data needs?\n\u251c\u2500\u2500 No (1-2 clients, similar needs) \u2192 REST is sufficient\n\u2514\u2500\u2500 Yes \u2192 GraphQL pays off\n\nIs your data model simple and stable?\n\u251c\u2500\u2500 Yes \u2192 REST (CRUD maps naturally)\n\u2514\u2500\u2500 No (complex relationships, frequent changes) \u2192 GraphQL\n\nDo you need it running this week?\n\u251c\u2500\u2500 Yes \u2192 REST (faster to ship)\n\u2514\u2500\u2500 No \u2192 Either works\n```\n\n---\n\n## Recommendation for a Small Internal API\n\n**Default to REST** unless you have a specific reason not to:\n\n- \u2705 Faster to build and ship\n- \u2705 Easier to onboard teammates\n- \u2705 Standard HTTP tooling just works\n- \u2705 Sufficient for most internal use cases\n\n**Consider GraphQL if:**\n- Multiple internal clients need different data shapes\n- Your data has deep, complex relationships\n- Your team already knows it and wants the type safety\n\n> **Pragmatic take:** A well-designed REST API with consistent conventions beats a poorly implemented GraphQL API every time. Complexity should be justified by actual problems you're solving, not anticipated ones."
+  },
+  {
+    "turn_index": 1,
+    "user_text": "Give the main difference in one sentence.",
+    "assistant_text": "**REST uses multiple fixed endpoints that return predefined data, while GraphQL uses a single endpoint where the client specifies exactly what data it needs.**"
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Which is simpler to cache and why?",
+    "assistant_text": "**REST is simpler to cache** because GET requests use standard URLs that HTTP infrastructure (browsers, CDNs, proxies) can cache automatically \u2014 whereas GraphQL typically uses POST requests to a single endpoint, which HTTP caches ignore by default."
+  },
+  {
+    "turn_index": 3,
+    "user_text": "Name one downside of GraphQL for a small team.",
+    "assistant_text": "**Higher upfront complexity** \u2014 a small team has to define and maintain a schema, write resolvers, and learn GraphQL-specific tooling before shipping anything useful."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "Name one downside of REST for changing requirements.",
+    "assistant_text": "**Versioning sprawl** \u2014 as requirements change, REST APIs tend to accumulate multiple versions (`/v1/`, `/v2/`) or redundant endpoints, making the API harder to maintain over time."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "Which is easier to secure by default?",
+    "assistant_text": "**REST is easier to secure by default** because each endpoint has a clear, specific purpose making it straightforward to apply authentication and rate limiting per route \u2014 whereas GraphQL's single flexible endpoint makes it harder to control access at a granular level and easier for clients to craft expensive or overly broad queries."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a short recommendation for a 2-person team.",
+    "assistant_text": "**Use REST** \u2014 it's simpler to build, easier for both people to understand immediately, and has no unnecessary overhead for a small team."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide one thing they have in common.",
+    "assistant_text": "Both can deliver data over HTTP and return responses in JSON."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "State which has clearer tooling out of the box.",
+    "assistant_text": "**REST** \u2014 standard HTTP tools like curl, Postman, and browser dev tools work immediately with no extra setup."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give a one-line summary.",
+    "assistant_text": "**For most small teams, REST is the pragmatic default \u2014 choose GraphQL only when clients genuinely need flexible, complex data fetching.**"
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Answer in two bullets.",
+    "assistant_text": "- **REST** is simpler, faster to build, and easier to maintain for small teams.\n- **GraphQL** is more flexible but adds complexity only worth it when clients have varying data needs."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Provide a final short recap.",
+    "assistant_text": "REST is the safer, simpler choice for small teams; GraphQL shines when flexibility and complex data fetching justify the extra setup."
+  }
+]

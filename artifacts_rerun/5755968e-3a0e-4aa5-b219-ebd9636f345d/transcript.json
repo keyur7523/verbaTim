@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Explain what a hash table is and when to use it.",
+    "assistant_text": "## Hash Table\n\nA hash table (or hash map) is a data structure that stores **key-value pairs** using a **hash function** to compute an index into an array of buckets.\n\n### How It Works\n```\nkey \u2192 hash function \u2192 index \u2192 stored value\n\n\"name\" \u2192 hash() \u2192 42 \u2192 \"Alice\"\n```\n\n**Collisions** (two keys mapping to the same index) are handled via:\n- **Chaining** \u2013 store a linked list at each bucket\n- **Open addressing** \u2013 probe for the next empty slot\n\n### Performance\n| Operation | Average | Worst Case |\n|-----------|---------|------------|\n| Insert | O(1) | O(n) |\n| Lookup | O(1) | O(n) |\n| Delete | O(1) | O(n) |\n\nWorst case occurs with many collisions (poor hash function or high load factor).\n\n---\n\n## When to Use It\n\n**\u2705 Good for:**\n- Fast lookups by key (caches, indexes)\n- Counting/frequency tracking (`word \u2192 count`)\n- Deduplication (checking if something was seen)\n- Implementing sets\n- Database indexing\n\n**\u274c Avoid when:**\n- You need **sorted data** (use a BST/sorted array)\n- You need **ordered iteration**\n- Memory is very constrained (hash tables have overhead)\n- Keys aren't hashable\n\n---\n\n## Quick Example (Python)\n```python\n# Counting word frequency\nfreq = {}\nfor word in words:\n    freq[word] = freq.get(word, 0) + 1\n```\n\n**Bottom line:** Reach for a hash table whenever you need fast O(1) key-based access and order doesn't matter."
+  },
+  {
+    "turn_index": 1,
+    "user_text": "Summarize the key benefit in one sentence.",
+    "assistant_text": "Hash tables provide **O(1) average-time lookups, insertions, and deletions** by using a hash function to map keys directly to memory locations."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give one practical example in everyday apps.",
+    "assistant_text": "A web browser uses a hash table to store **cached pages**, instantly looking up whether a URL has already been visited instead of re-fetching it from the network."
+  },
+  {
+    "turn_index": 3,
+    "user_text": "Name one tradeoff compared to a balanced tree.",
+    "assistant_text": "Hash tables are faster on average (O(1) vs O(log n)), but unlike balanced trees, they **don't maintain sorted order**, so range queries like \"find all keys between A and B\" are inefficient."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "List two common pitfalls.",
+    "assistant_text": "1. **Poor hash functions** \u2013 causing many collisions and degrading performance from O(1) to O(n).\n2. **High load factor** \u2013 overfilling the table increases collisions; failing to resize/rehash at the right time tanks performance."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "State the average time complexity for lookup.",
+    "assistant_text": "**O(1)** \u2013 constant time on average."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "What is a good alternative when memory is tight?",
+    "assistant_text": "A **binary search tree (BST)** \u2013 it has no hash overhead or empty bucket waste, using only the memory needed for actual elements (though lookups are O(log n) instead of O(1))."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide one short analogy.",
+    "assistant_text": "A hash table is like a **filing cabinet with labeled folders** \u2014 instead of searching every folder, you go directly to the exact drawer the label tells you."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "Describe when I should not use it.",
+    "assistant_text": "Avoid a hash table when you need **sorted or ordered data**, such as finding the minimum/maximum, iterating in order, or performing range queries \u2014 use a balanced BST or sorted array instead."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one reason it can be faster than a list.",
+    "assistant_text": "A hash table jumps **directly to a key's location** in O(1), while a list must scan elements one by one until it finds a match \u2014 O(n)."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a one-line recap.",
+    "assistant_text": "A hash table is the go-to structure for **fast O(1) key-value lookups** when order doesn't matter."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in a short bullet list.",
+    "assistant_text": "- Stores **key-value pairs**\n- Uses a **hash function** for direct access\n- **O(1)** average lookup, insert, delete\n- Best when you need **fast access by key**\n- Avoid when **sorted order** is required"
+  }
+]

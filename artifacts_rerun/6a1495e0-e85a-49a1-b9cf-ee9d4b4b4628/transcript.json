@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Plan a 1-day migration from SVN to Git for a small repo.",
+    "assistant_text": "# 1-Day SVN \u2192 Git Migration Plan\n\n## Morning (4h)\n1. **Audit SVN repo** \u2013 check size, branches, tags, externals\n2. **Map authors** \u2013 create `authors.txt` (SVN user \u2192 Git email)\n3. **Clone with git-svn**: `git svn clone <url> --authors-file=authors.txt --stdlayout`\n\n## Midday (2h)\n4. **Clean up** \u2013 convert tags/branches, remove `git-svn` metadata\n5. **Verify history** \u2013 spot-check commits/logs\n\n## Afternoon (2h)\n6. **Push to remote** (GitHub/GitLab)\n7. **Test clone** on a fresh machine\n8. **Update CI/CD** pipelines\n\n## End of Day (2h)\n9. **Notify team**, share new repo URL\n10. **Lock SVN repo** (read-only)\n11. **Document** the new Git workflow\n\n## Key Tools\n- `git-svn`\n- `svn2git` (cleaner alternative)\n\n> \u2705 Done in ~8 hours for small repos."
+  },
+  {
+    "turn_index": 1,
+    "user_text": "List the top 3 risks.",
+    "assistant_text": "## Top 3 Migration Risks\n\n1. **Lost History** \u2013 Merges/externals may not convert cleanly; always verify commit count post-migration.\n\n2. **Author Mapping Errors** \u2013 Missing users in `authors.txt` will break the clone; audit SVN logs first.\n\n3. **CI/CD Breakage** \u2013 Pipelines hardcoded to SVN paths will fail; update configs before going live."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give a short checklist.",
+    "assistant_text": "## Migration Checklist\n\n- [ ] Audit SVN repo (size, branches, tags)\n- [ ] Create `authors.txt`\n- [ ] Run `git svn clone`\n- [ ] Verify commit history\n- [ ] Clean up branches/tags\n- [ ] Push to remote\n- [ ] Test fresh clone\n- [ ] Update CI/CD\n- [ ] Lock SVN repo\n- [ ] Notify team"
+  },
+  {
+    "turn_index": 3,
+    "user_text": "State one rollback option.",
+    "assistant_text": "**Rollback Option:** Keep SVN repo in **read-only mode** (don't delete it) until the team confirms Git is stable \u2014 revert by simply re-enabling SVN write access."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "Name one prerequisite.",
+    "assistant_text": "**Prerequisite:** `git-svn` installed and accessible on the migration machine."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "What is the fastest validation step?",
+    "assistant_text": "**Fastest Validation:** Compare commit counts \u2014 run `svn log --quiet | grep \"^r\" | wc -l` vs `git log --oneline | wc -l` to confirm history matches in seconds."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a one-line timeline.",
+    "assistant_text": "**Timeline:** Audit \u2192 Clone \u2192 Clean \u2192 Verify \u2192 Push \u2192 Test \u2192 Notify \u2192 Lock *(~8 hours total)*"
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide two tools you might use.",
+    "assistant_text": "1. **git-svn** \u2013 built-in Git tool for cloning SVN repos\n2. **svn2git** \u2013 cleaner wrapper that handles branches/tags automatically"
+  },
+  {
+    "turn_index": 8,
+    "user_text": "State who should approve the final cutover.",
+    "assistant_text": "**Approver:** The **Tech Lead or Engineering Manager** should approve the final cutover after verifying history, CI/CD, and team readiness."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one short communication tip.",
+    "assistant_text": "**Tip:** Send a **24-hour heads-up** to the team before cutover with the new repo URL and key dates."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a final recap.",
+    "assistant_text": "## Final Recap\n\n- **Goal:** Migrate SVN \u2192 Git in 1 day\n- **Key Steps:** Audit, Clone, Clean, Verify, Push, Lock\n- **Top Risks:** Lost history, author errors, CI/CD breakage\n- **Tools:** `git-svn`, `svn2git`\n- **Approver:** Tech Lead/Engineering Manager\n- **Rollback:** Keep SVN read-only until stable\n- **Done!** \u2705"
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in short bullets only.",
+    "assistant_text": "- Migrate SVN \u2192 Git in 1 day\n- Audit, Clone, Clean, Verify, Push, Lock\n- Risks: history, authors, CI/CD\n- Tools: git-svn, svn2git\n- Approver: Tech Lead\n- Rollback: keep SVN read-only \u2705"
+  }
+]

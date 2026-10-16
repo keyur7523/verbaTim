@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Summarize the benefits of code review for a small team.",
+    "assistant_text": "# Benefits of Code Review for a Small Team\n\n## Quality & Reliability\n- **Catches bugs early** before they reach production\n- **Enforces coding standards** and consistency across the codebase\n- **Reduces technical debt** by encouraging cleaner solutions upfront\n\n## Knowledge Sharing\n- **Spreads context** so no single person is the only one who understands a feature\n- **Onboards new members faster** by exposing them to existing patterns\n- **Surfaces better approaches** team members may not have considered\n\n## Team Collaboration\n- **Builds shared ownership** \u2014 everyone feels responsible for the codebase\n- **Encourages communication** and constructive feedback habits\n- **Reduces bus factor** (risk of losing critical knowledge if someone leaves)\n\n## Long-Term Efficiency\n- **Fewer production incidents** mean less time firefighting\n- **Easier maintenance** when code is readable and well-structured\n- **Documents decisions** through review comments and discussions\n\n---\n\n## Practical Tips for Small Teams\n- Keep reviews **focused and timely** (avoid large, delayed PRs)\n- Use a **lightweight process** \u2014 don't over-engineer it\n- Treat feedback as **collaborative, not critical**\n\n> Even a quick second set of eyes can prevent costly mistakes and keep a small team aligned."
+  },
+  {
+    "turn_index": 1,
+    "user_text": "Give a one-sentence summary.",
+    "assistant_text": "Code review helps small teams catch bugs early, share knowledge, and maintain a consistent, high-quality codebase."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "List two concrete benefits.",
+    "assistant_text": "1. **Bug detection** \u2014 A second set of eyes catches mistakes before they reach production.\n2. **Knowledge sharing** \u2014 Team members learn from each other's code, reducing reliance on any single person."
+  },
+  {
+    "turn_index": 3,
+    "user_text": "Name one cultural benefit.",
+    "assistant_text": "Code review builds a culture of **shared ownership**, where everyone feels collectively responsible for the quality of the codebase rather than protective of their individual work."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "State one risk if reviews are skipped.",
+    "assistant_text": "If reviews are skipped, **technical debt accumulates rapidly**, as unchecked code tends to be inconsistent and harder to maintain over time."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "Provide one metric to track.",
+    "assistant_text": "Track **defect escape rate** \u2014 the number of bugs found in production versus those caught during review \u2014 to measure how effectively your review process is preventing issues from reaching users."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a short concluding line.",
+    "assistant_text": "A consistent code review practice is one of the simplest investments a small team can make for long-term code health and team cohesion."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Answer in bullets only.",
+    "assistant_text": "\u2022 Code review is a simple but powerful practice for small teams.\n\u2022 It improves quality, sharing knowledge, and team collaboration.\n\u2022 Skipping it leads to bugs, debt, and siloed knowledge.\n\u2022 Tracking metrics like defect escape rate shows its real impact.\n\u2022 Even a lightweight process delivers significant long-term benefits."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "Provide a final one-line recap.",
+    "assistant_text": "Code review is a small investment that pays off in fewer bugs, stronger teams, and a healthier codebase."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Offer one caveat.",
+    "assistant_text": "Code review is only effective if feedback is timely and constructive \u2014 slow or overly critical reviews can bottleneck progress and harm team morale."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Restate in 10 words.",
+    "assistant_text": "Done poorly, code review can slow teams and hurt morale."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Provide a final short summary.",
+    "assistant_text": "Code review boosts quality and collaboration, but only works well when kept timely, constructive, and lightweight."
+  }
+]

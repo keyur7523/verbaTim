@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "A Python script hangs when reading a large file. Give likely causes.",
+    "assistant_text": "**Likely causes:**\n\n- **Blocking I/O** \u2013 reading the entire file into memory at once (`file.read()`) on a very large file stalls until complete or causes thrashing\n- **Infinite loop** \u2013 logic error in a manual read loop (e.g., `while True` with no break condition)\n- **Deadlock** \u2013 using threads/subprocesses where a pipe buffer fills and both sides block waiting on each other\n- **Network/NFS mount** \u2013 file is on a slow or unresponsive remote filesystem; reads block indefinitely\n- **Locked file** \u2013 another process holds an exclusive lock\n- **Buffered stdin** \u2013 reading from a pipe/stdin that never sends EOF\n- **Regex on large input** \u2013 catastrophic backtracking mid-read causing CPU spin (appears hung)\n- **Swap exhaustion** \u2013 system OOM causes extreme paging, making progress near-zero\n\n**Quick diagnosis:**\n\n```bash\nstrace -p <pid>        # see what syscall it's stuck on\nlsof -p <pid>          # check what file/fd is open\npy-spy top --pid <pid> # Python-level stack trace without stopping the process\n```"
+  },
+  {
+    "turn_index": 1,
+    "user_text": "Suggest one quick diagnostic step.",
+    "assistant_text": "Run:\n\n```bash\npy-spy dump --pid <pid>\n```\n\nPrints the current Python stack trace instantly, showing exactly where the script is blocked\u2014no restart required."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Name one common I/O mistake.",
+    "assistant_text": "Using `file.read()` on a large file \u2014 loads everything into memory at once. Use `for line in file` instead."
+  },
+  {
+    "turn_index": 3,
+    "user_text": "Provide a short fix idea.",
+    "assistant_text": "Replace:\n```python\ndata = file.read()\n```\nWith:\n```python\nfor chunk in iter(lambda: file.read(8192), b''):\n    process(chunk)\n```\nReads in 8 KB chunks, preventing memory exhaustion."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "Give one reason buffering matters.",
+    "assistant_text": "Unbuffered reads make a syscall per byte \u2014 crushing performance. Buffering batches reads, drastically reducing syscall overhead."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "State one possible OS-level issue.",
+    "assistant_text": "The file is on an NFS/network mount that becomes unresponsive \u2014 the kernel blocks the read syscall indefinitely, hanging the process."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a one-line summary.",
+    "assistant_text": "Large file hangs usually stem from memory exhaustion, blocking I/O, or logic errors \u2014 fix by streaming data in chunks."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "List two safe mitigation steps.",
+    "assistant_text": "1. **Stream in chunks** \u2013 use `iter()` or `for line in file` to avoid loading all at once.\n2. **Set a timeout** \u2013 use `signal.alarm()` or async I/O to abort if the read stalls too long."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "Provide a short next step.",
+    "assistant_text": "Profile with `py-spy` to pinpoint the exact bottleneck, then apply chunked reading if I/O-bound."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Answer in two bullets.",
+    "assistant_text": "- Run `py-spy dump --pid <pid>` to identify where the script is stuck.\n- Switch to chunked reading if blocked on I/O."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Final recap in one sentence.",
+    "assistant_text": "Stream large files in chunks, diagnose hangs with `py-spy`, and guard against blocking I/O or memory exhaustion."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Provide one caution.",
+    "assistant_text": "Avoid assuming the fix is always chunking \u2014 if the hang is due to a network mount or file lock, chunking won't help; diagnose first."
+  }
+]

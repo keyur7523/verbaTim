@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Explain what a hash table is and when to use it.",
+    "assistant_text": "# Hash Tables\n\n## What Is a Hash Table?\n\nA hash table (also called a hash map) is a data structure that stores **key-value pairs** and provides fast lookup, insertion, and deletion.\n\nIt works by using a **hash function** to convert a key into an index, which determines where the value is stored in an underlying array.\n\n```\nKey \u2192 Hash Function \u2192 Index \u2192 Value\n\n\"name\" \u2192 hash() \u2192 4 \u2192 \"Alice\"\n\"age\"  \u2192 hash() \u2192 7 \u2192 30\n```\n\n---\n\n## How It Works\n\n1. **Insert:** Hash the key \u2192 get an index \u2192 store the value there\n2. **Lookup:** Hash the key \u2192 get the same index \u2192 retrieve the value\n3. **Delete:** Hash the key \u2192 find the index \u2192 remove the value\n\n### Handling Collisions\nWhen two keys hash to the same index, common solutions include:\n- **Chaining** \u2013 Store a linked list at each index\n- **Open addressing** \u2013 Probe for the next available slot\n\n---\n\n## Time Complexity\n\n| Operation | Average | Worst Case |\n|-----------|---------|------------|\n| Insert    | O(1)    | O(n)       |\n| Lookup    | O(1)    | O(n)       |\n| Delete    | O(1)    | O(n)       |\n\n> Worst case occurs with many collisions. A good hash function keeps this rare.\n\n---\n\n## When to Use a Hash Table\n\n### \u2705 Good Use Cases\n\n| Scenario | Example |\n|----------|---------|\n| **Fast lookups by key** | User records by ID |\n| **Counting/frequency** | Word count in a document |\n| **Caching** | Memoization, web caches |\n| **Deduplication** | Removing duplicate entries |\n| **Grouping/indexing** | Group items by category |\n| **Set membership** | \"Have I seen this before?\" |\n\n### \u274c When NOT to Use One\n\n- You need **sorted data** \u2192 Use a balanced BST or sorted array\n- You need **range queries** (e.g., all keys between A and B) \u2192 Use a tree\n- **Memory is very constrained** \u2192 Hash tables have overhead\n- Keys have a **poor hash distribution** \u2192 Leads to many collisions\n- You need **ordered iteration** \u2192 Use a linked hash map or tree map\n\n---\n\n## Quick Code Example (Python)\n\n```python\n# Counting word frequency\ntext = [\"apple\", \"banana\", \"apple\", \"cherry\", \"banana\", \"apple\"]\n\nfrequency = {}\nfor word in text:\n    frequency[word] = frequency.get(word, 0) + 1\n\nprint(frequency)\n# {\"apple\": 3, \"banana\": 2, \"cherry\": 1}\n```\n\n---\n\n## Summary\n\n| | |\n|---|---|\n| **Best for** | Fast key-based access |\n| **Core trade-off** | Speed vs. memory, no ordering |\n| **Key requirement** | A good hash function |\n| **Common names** | HashMap, Dictionary, Object, Map |\n\nHash tables are one of the most widely used data structures because **O(1) average lookup** is extremely powerful for a broad range of problems."
+  },
+  {
+    "turn_index": 1,
+    "user_text": "Summarize the key benefit in one sentence.",
+    "assistant_text": "Hash tables provide **near-instant (O(1) average) lookup, insertion, and deletion** by using a hash function to map keys directly to their stored values."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give one practical example in everyday apps.",
+    "assistant_text": "A web browser uses a hash table to store **cached web pages**, so when you revisit a site, it can instantly look up the saved content by URL instead of re-downloading it."
+  },
+  {
+    "turn_index": 3,
+    "user_text": "Name one tradeoff compared to a balanced tree.",
+    "assistant_text": "Hash tables offer faster average lookups **(O(1) vs. O(log n))**, but unlike balanced trees, they **don't maintain sorted order**, making range queries (e.g., \"find all keys between A and B\") inefficient."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "List two common pitfalls.",
+    "assistant_text": "1. **Poor hash functions** \u2013 A bad hash function causes many keys to collide at the same index, degrading performance from O(1) to O(n).\n\n2. **Assuming order** \u2013 Hash tables don't guarantee insertion or sorted order, so iterating over them can produce unpredictable results if order matters."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "State the average time complexity for lookup.",
+    "assistant_text": "**O(1)** \u2013 constant time on average."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "What is a good alternative when memory is tight?",
+    "assistant_text": "A **binary search tree (BST)** is a good alternative, as it uses memory only for the elements it stores with no extra overhead for empty slots or hash table buckets."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide one short analogy.",
+    "assistant_text": "A hash table is like a **filing cabinet with labeled folders** \u2014 instead of searching every folder, you go directly to the exact folder you need based on its label."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "Describe when I should not use it.",
+    "assistant_text": "Avoid a hash table when you need **sorted data or range queries** (e.g., \"find all values between 10 and 50\"), as it has no concept of order \u2014 use a balanced tree or sorted array instead."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one reason it can be faster than a list.",
+    "assistant_text": "Unlike a list, which must **scan every element one by one (O(n))** to find a match, a hash table jumps directly to the value using the hashed key **(O(1))**, making lookups dramatically faster as data grows."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a one-line recap.",
+    "assistant_text": "A hash table is a fast key-value data structure that trades memory and ordering for near-instant lookups."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in a short bullet list.",
+    "assistant_text": "\u2022 Stores **key-value pairs**\n\u2022 Uses a **hash function** for direct indexing\n\u2022 **O(1)** average lookup, insert, and delete\n\u2022 Best for **fast access by key**\n\u2022 Avoid when **order or range queries** matter"
+  }
+]

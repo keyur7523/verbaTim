@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Summarize the benefits of code review for a small team.",
+    "assistant_text": "**Benefits of Code Review for Small Teams**\n\n- **Quality** \u2013 Catches bugs and logic errors before they reach production\n- **Knowledge sharing** \u2013 Spreads context so no one person owns critical code\n- **Consistency** \u2013 Enforces style and architecture standards organically\n- **Mentorship** \u2013 Junior devs learn faster through direct feedback\n- **Accountability** \u2013 Encourages cleaner commits when others will read your work\n- **Bus factor** \u2013 Reduces risk if a team member leaves\n\nFor small teams, the overhead is low and the cross-training benefit is especially high given limited redundancy."
+  },
+  {
+    "turn_index": 1,
+    "user_text": "Give a one-sentence summary.",
+    "assistant_text": "Code review helps small teams catch bugs, share knowledge, and maintain quality with minimal overhead."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "List two concrete benefits.",
+    "assistant_text": "1. **Bug detection** \u2013 Errors are caught before reaching production.\n2. **Knowledge sharing** \u2013 Team members stay familiar with each other's code."
+  },
+  {
+    "turn_index": 3,
+    "user_text": "Name one cultural benefit.",
+    "assistant_text": "Code review builds a culture of **accountability**, encouraging developers to write cleaner, more thoughtful code knowing peers will read it."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "State one risk if reviews are skipped.",
+    "assistant_text": "Knowledge silos form, leaving the team vulnerable if a key developer leaves."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "Provide one metric to track.",
+    "assistant_text": "**Defect escape rate** \u2013 the percentage of bugs found in production versus those caught in review."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a short concluding line.",
+    "assistant_text": "Consistent code review is a small investment that pays dividends in quality and team resilience."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Answer in bullets only.",
+    "assistant_text": "- Consistent code review is a small investment that pays dividends in quality and team resilience."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "Provide a final one-line recap.",
+    "assistant_text": "Code review is a lightweight practice with outsized impact on quality, collaboration, and team health."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Offer one caveat.",
+    "assistant_text": "Reviews can become a bottleneck if not timeboxed or prioritized effectively."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Restate in 10 words.",
+    "assistant_text": "Slow reviews bottleneck teams; timebox them to stay effective."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Provide a final short summary.",
+    "assistant_text": "Code review boosts quality and collaboration\u2014but keep it timely."
+  }
+]

@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Plan a 1-day migration from SVN to Git for a small repo.",
+    "assistant_text": "## SVN \u2192 Git Migration (1-Day Plan)\n\n**Prerequisites (night before)**\n- Git, `git-svn`, and `svn` installed\n- Admin access to both SVN server and new Git host (GitHub/GitLab/etc.)\n- Repo size checked (`svn info` \u2014 under ~1GB is fine for 1 day)\n\n---\n\n### Morning (2\u20133 hrs): Prep & Clone\n\n**1. Export authors map** (~30 min)\n```bash\nsvn log svn://your-repo --xml | grep author | sort -u | \\\n  perl -pe 's/<author>(.*?)<\\/author>/$1 = $1 <$1\\@company.com>/' > authors.txt\n```\nEdit `authors.txt` to fill in real names/emails.\n\n**2. Clone SVN repo with history**\n```bash\ngit svn clone svn://your-repo \\\n  --authors-file=authors.txt \\\n  --stdlayout \\          # assumes trunk/branches/tags\n  --no-metadata \\\n  -A authors.txt \\\n  my-repo/\n```\n> `--stdlayout` handles trunk \u2192 main, branches, tags automatically.\n\n---\n\n### Midday (1\u20132 hrs): Clean Up\n\n**3. Convert SVN branches/tags to Git**\n```bash\ncd my-repo\n\n# Tags\ngit for-each-ref refs/remotes/tags | cut -d / -f 5- | while read tag; do\n  git tag \"$tag\" \"refs/remotes/tags/$tag\"\n  git branch -r -d \"tags/$tag\"\ndone\n\n# Branches\ngit for-each-ref refs/remotes | grep -v tags | cut -d / -f 4- | while read branch; do\n  git branch \"$branch\" \"refs/remotes/$branch\"\ndone\n```\n\n**4. Verify**\n- `git log --oneline | head -20` \u2014 history looks right?\n- `git branch -a` \u2014 expected branches present?\n- `git tag` \u2014 tags converted?\n\n**5. Add `.gitignore`**\nConvert `svn:ignore` properties:\n```bash\ngit svn show-ignore > .gitignore\ngit add .gitignore && git commit -m \"Add .gitignore from SVN\"\n```\n\n---\n\n### Afternoon (1\u20132 hrs): Push & Validate\n\n**6. Add remote & push**\n```bash\ngit remote add origin https://github.com/org/my-repo.git\ngit push origin --all\ngit push origin --tags\n```\n\n**7. Validate on Git host**\n- Commit count matches SVN (`svn info` revision vs `git rev-list --count HEAD`)\n- Branches and tags visible\n- Spot-check 2\u20133 commits for correct author/date\n\n---\n\n### End of Day: Cut Over\n\n**8. Lock SVN repo** (prevent new commits)\n```bash\nsvnadmin lock /path/to/repo   # or set access control to read-only\n```\n\n**9. Notify team**\n- New clone URL\n- Basic Git workflow cheatsheet (if needed)\n- Point CI/CD to new repo\n\n---\n\n### Risk Mitigations\n| Risk | Mitigation |\n|---|---|\n| Missing authors | Script fails loudly \u2014 fix `authors.txt` and re-run |\n| Large binaries | Use Git LFS before pushing |\n| SVN externals | Map manually to Git submodules or inline |\n| Merge history loss | Expected \u2014 SVN mergeinfo doesn't translate cleanly |\n\n---\n\n**Total time: ~6\u20137 hrs** with buffer for surprises. Keep SVN read-only for 1\u20132 weeks as a safety net."
+  },
+  {
+    "turn_index": 1,
+    "user_text": "List the top 3 risks.",
+    "assistant_text": "From the plan above:\n\n1. **Merge history loss** \u2014 SVN mergeinfo doesn't translate; branches may appear as flat commits.\n2. **Missing/wrong authors** \u2014 Any unmapped user breaks the clone mid-run; requires a full re-clone to fix.\n3. **SVN externals** \u2014 No automatic conversion; must be manually remapped to submodules or inlined, which can block builds."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give a short checklist.",
+    "assistant_text": "**SVN \u2192 Git Migration Checklist**\n\n- [ ] Install `git-svn`, verify SVN access\n- [ ] Export and complete `authors.txt`\n- [ ] Clone with `git svn clone`\n- [ ] Convert branches and tags\n- [ ] Generate `.gitignore` from `svn:ignore`\n- [ ] Verify history, branches, and tags\n- [ ] Push to Git host (`--all`, `--tags`)\n- [ ] Validate commit count and spot-check authors\n- [ ] Lock SVN repo (read-only)\n- [ ] Notify team with new URL"
+  },
+  {
+    "turn_index": 3,
+    "user_text": "State one rollback option.",
+    "assistant_text": "Keep SVN read-only (don't delete it) for 1\u20132 weeks \u2014 if anything is wrong, the team reverts to SVN while you fix and re-migrate."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "Name one prerequisite.",
+    "assistant_text": "Admin access to both the SVN server and the target Git host."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "What is the fastest validation step?",
+    "assistant_text": "Compare commit counts:\n```bash\ngit rev-list --count HEAD\n```\nvs. the SVN revision number from `svn info`."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a one-line timeline.",
+    "assistant_text": "Prep \u2192 Clone \u2192 Clean up \u2192 Push \u2192 Validate \u2192 Cut over (one day, ~6\u20137 hrs total)."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide two tools you might use.",
+    "assistant_text": "1. **`git-svn`** \u2014 clones SVN history into Git.\n2. **`svnadmin`** \u2014 locks SVN repo at cut over."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "State who should approve the final cutover.",
+    "assistant_text": "The project or team lead with authority over the codebase and CI/CD pipelines."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one short communication tip.",
+    "assistant_text": "Send one message with the new repo URL, cutover time, and a two-line Git clone command \u2014 before the switch happens."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a final recap.",
+    "assistant_text": "**Migration in a nutshell:**\n- **Prep:** map authors, install tools\n- **Migrate:** `git svn clone`, convert branches/tags\n- **Validate:** check commit count, authors, branches\n- **Cut over:** lock SVN, push to Git, notify team\n- **Safety net:** keep SVN read-only for 1\u20132 weeks\n\nTop risks: merge history loss, missing authors, SVN externals.\nKey tools: `git-svn`, `svnadmin`.\nApprover: team/project lead.\nTotal time: ~6\u20137 hrs."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in short bullets only.",
+    "assistant_text": "- Clone SVN with `git-svn`\n- Clean up branches/tags\n- Validate commit count\n- Lock SVN, push to Git\n- Notify team\n- Keep SVN as fallback 1\u20132 weeks"
+  }
+]

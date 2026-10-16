@@ -1,0 +1,144 @@
+{
+  "model": "claude-sonnet-4-6",
+  "excluded": {},
+  "results": [
+    {
+      "condition": "verbatim",
+      "n_runs": 50,
+      "n_baseline_runs": 50,
+      "ratio_drift_pct_per_turn": 3.6541238229710706,
+      "ratio_drift_ci95_bootstrap": [
+        2.962364900775143,
+        4.305863704474607
+      ],
+      "ratio_drift_ci95_t": [
+        2.328851874229164,
+        4.979395771712977
+      ],
+      "length_ratio_vs_baseline": 0.5867927047611132,
+      "length_ratio_ci95_bootstrap": [
+        0.5655545535715141,
+        0.6112861687290735
+      ],
+      "per_intent": {
+        "concept_explanation": {
+          "n": 10,
+          "ratio_drift_pct_per_turn": -0.6091221779958955,
+          "length_ratio": 0.6559659833867753
+        },
+        "debugging_analysis": {
+          "n": 10,
+          "ratio_drift_pct_per_turn": 10.699791239041618,
+          "length_ratio": 0.45920730107543484
+        },
+        "option_comparison": {
+          "n": 10,
+          "ratio_drift_pct_per_turn": 1.8764003554660136,
+          "length_ratio": 0.7452523752127261
+        },
+        "step_by_step_planning": {
+          "n": 10,
+          "ratio_drift_pct_per_turn": 6.284248083443473,
+          "length_ratio": 0.4237127022181453
+        },
+        "summarization": {
+          "n": 10,
+          "ratio_drift_pct_per_turn": 0.019301614900143482,
+          "length_ratio": 0.7314060929191994
+        }
+      }
+    },
+    {
+      "condition": "budgeted",
+      "n_runs": 50,
+      "n_baseline_runs": 50,
+      "ratio_drift_pct_per_turn": 1.7327966002659292,
+      "ratio_drift_ci95_bootstrap": [
+        0.8523866389469261,
+        2.7034770760534874
+      ],
+      "ratio_drift_ci95_t": [
+        0.4937566710966701,
+        2.9718365294351883
+      ],
+      "length_ratio_vs_baseline": 0.6498998741812406,
+      "length_ratio_ci95_bootstrap": [
+        0.625890536836489,
+        0.6779522728350937
+      ],
+      "per_intent": {
+        "concept_explanation": {
+          "n": 10,
+          "ratio_drift_pct_per_turn": -2.031764221665812,
+          "length_ratio": 0.7189266769770349
+        },
+        "debugging_analysis": {
+          "n": 10,
+          "ratio_drift_pct_per_turn": 4.031742965240484,
+          "length_ratio": 0.5446725477717259
+        },
+        "option_comparison": {
+          "n": 10,
+          "ratio_drift_pct_per_turn": 2.3525734983963975,
+          "length_ratio": 0.7104833859432467
+        },
+        "step_by_step_planning": {
+          "n": 10,
+          "ratio_drift_pct_per_turn": 5.999326804760221,
+          "length_ratio": 0.5013443911644508
+        },
+        "summarization": {
+          "n": 10,
+          "ratio_drift_pct_per_turn": -1.6878960454016456,
+          "length_ratio": 0.8312316884167471
+        }
+      }
+    },
+    {
+      "condition": "naive",
+      "n_runs": 50,
+      "n_baseline_runs": 50,
+      "ratio_drift_pct_per_turn": 2.7555795919646657,
+      "ratio_drift_ci95_bootstrap": [
+        1.8963571925776095,
+        3.639628050986431
+      ],
+      "ratio_drift_ci95_t": [
+        1.0590729073781513,
+        4.45208627655118
+      ],
+      "length_ratio_vs_baseline": 0.6536852345553934,
+      "length_ratio_ci95_bootstrap": [
+        0.6234679225432687,
+        0.6868264686082736
+      ],
+      "per_intent": {
+        "concept_explanation": {
+          "n": 10,
+          "ratio_drift_pct_per_turn": -0.8804009165578996,
+          "length_ratio": 0.8305204888791017
+        },
+        "debugging_analysis": {
+          "n": 10,
+          "ratio_drift_pct_per_turn": 13.105578266151696,
+          "length_ratio": 0.46828045299958326
+        },
+        "option_comparison": {
+          "n": 10,
+          "ratio_drift_pct_per_turn": 1.6782767393599674,
+          "length_ratio": 0.7546008525881303
+        },
+        "step_by_step_planning": {
+          "n": 10,
+          "ratio_drift_pct_per_turn": 0.6412621863836753,
+          "length_ratio": 0.46207141650862116
+        },
+        "summarization": {
+          "n": 10,
+          "ratio_drift_pct_per_turn": -0.7668183155141095,
+          "length_ratio": 0.8801579168854179
+        }
+      }
+    }
+  ]
+}

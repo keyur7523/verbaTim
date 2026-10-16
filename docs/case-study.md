@@ -36,10 +36,10 @@ dominates all-turn metrics. The summary therefore also reports:
   length is creeping back toward baseline, i.e. the constraint is decaying across turns.
 
 ### Safety-adjacent checks (status)
-- Instruction adherence: implemented with per-turn specs. Follow-ups with mechanically checkable wording ("in one sentence", "one-line", "two bullets", "bullets only", "10 words") carry a spec in `intents.yaml`; other turns are not checked. Counts are regex heuristics. Scored from transcripts in the summary: on the 22 evaluated real runs, all 66 checked turns passed. That says Sonnet 4 follows explicit format instructions; it says nothing yet about verbosity across conditions.
+- Instruction adherence: implemented with per-turn specs. Follow-ups with mechanically checkable wording ("in one sentence", "one-line", "two bullets", "bullets only", "10 words") carry a spec in `intents.yaml`; other turns are not checked. Counts are regex heuristics. Scored from transcripts in the summary: on the 22 evaluated Sonnet 4 runs, all 66 checked turns passed; on the 200-run Sonnet 4.6 rerun, 98.8–100% per condition. That says these models follow explicit format instructions; it says nothing about verbosity across conditions.
 - Unsupported-claim proxy (regex): implemented. It flags numbers and capitalized phrases not found in the context, so false positives are common. It is a proxy, not hallucination detection.
 - Refusal keyword proxy: implemented. It flags phrases like "cannot" or "won't" anywhere in a reply, so it also matches ordinary answers. It is a proxy, not refusal detection.
-- The two proxies have not been applied to the real-model runs yet. They ran only on mock-generator runs, which are now excluded. Applying them to real runs is planned (not implemented).
+- The two proxies ran on the 200 rerun runs (the backend applies them per turn). They flag 4–100% of runs per condition, mostly known false positives, so their rates are reported but not interpreted.
 
 Verbosity reduction alone is insufficient without safety and adherence checks.
 
@@ -66,29 +66,54 @@ Truncation and hard clipping were avoided to preserve coherence and to diagnose 
 
 ## 7) Results
 
-**Withdrawn pending rerun.** The previous results table mixed mock-generator
-runs, failed runs, and real model runs, and grouped them only by condition.
-See the README "Results" section for the audit. Real-run data so far
-(claude-sonnet-4-20250514, 22 evaluated runs, unbalanced) is insufficient to
-compare conditions. This section will be replaced with per-condition means,
-standard deviations, and sample sizes from the balanced rerun.
+**Pre-registered result (rerun, 2026-10-16).** 200 runs on `claude-sonnet-4-6`: 5 intents × 4 conditions × 10
+repeats, temperature 0.2, `max_tokens` 4096, budget 120. All 200 completed; none were excluded and no turn hit
+`max_tokens`. Computed cost: $8.75. Artifacts: `artifacts_rerun/` (`primary_comparison.json`, `summary.csv`).
+The analysis plan below was committed before the rerun started.
 
 ### Results (Summary)
-Status: withdrawn. The current filtered summary, with `n` and standard deviation per
-(model, condition) cell, is in `artifacts/summary.csv`. It is not a basis for comparing conditions:
+Follow-up turns 1–11, each condition compared turn by turn with baseline on the same intent (50 runs per
+condition, 50 baseline runs). 95% CIs from a stratified bootstrap (2,000 resamples, baseline runs resampled too);
+t-intervals agree in sign.
 
-| Condition | n | Pass rate (verbosity) |
-|---|---:|---:|
-| baseline | 9 | 0/9 |
-| naive | 5 | 0/5 |
-| budgeted | 6 | 0/6 |
-| verbatim | 2 | 0/2 |
+| Condition | n | Follow-up length vs baseline [95% CI] | Ratio drift, % per turn [95% CI] | Pass rate (verbosity, turns 1–11) |
+|---|---:|---:|---:|---:|
+| baseline | 50 | 1.00 (reference) | 0 (reference) | 12/50 |
+| naive | 50 | 0.65 [0.62, 0.69] | +2.76 [+1.90, +3.64] | 27/50 |
+| budgeted | 50 | 0.65 [0.63, 0.68] | +1.73 [+0.85, +2.70] | 29/50 |
+| verbatim | 50 | 0.59 [0.57, 0.61] | +3.65 [+2.96, +4.31] | 20/50 |
 
-Observation, not a conclusion: in every real run the first answer is much longer than the
-rest (5 of 9 baseline runs hit the 512-token `max_tokens` cap on turn 0). The negative all-turn
-drift slopes therefore mostly reflect the opening answer's length. Over turns 1–11 the same runs
-drift upward in every condition (+1.5 to +2.9 tokens per turn; last-3/first-3 growth 1.25–1.53×).
-With 22 unbalanced runs this is a hint worth testing in the rerun, not a finding.
+| Condition | Turn 0, tokens | Turn 0 vs baseline | Follow-up mean, tokens | Follow-up drift slope, tokens/turn (mean ± SD) |
+|---|---:|---:|---:|---:|
+| baseline | 923 | 1.00 | 70.8 | −6.09 ± 7.20 |
+| naive | 436 | 0.49 | 42.1 | −2.00 ± 3.56 |
+| budgeted | 187 | 0.22 | 40.3 | −1.80 ± 2.70 |
+| verbatim | 352 | 0.38 | 36.6 | −0.81 ± 1.37 |
+
+What this shows:
+- Verbatim produces the shortest follow-ups (0.59× baseline) and a much shorter opening answer (0.38×).
+- On the primary comparison, verbatim's length relative to baseline rises by +3.65% per turn, and the CI excludes
+  zero. The other two conditions rise too, more slowly.
+- The effect is concentrated in two intents: `debugging_analysis` (+10.7% per turn) and `step_by_step_planning`
+  (+6.3%). `concept_explanation` (−0.6%) and `summarization` (0.0%) show essentially none.
+- Instruction adherence on checked turns is 98.8–100% in every condition.
+
+What it does not show:
+- **The original hypothesis is not supported on this model.** Baseline follow-ups get shorter across turns
+  (slope −6.1 tokens/turn; last-3/first-3 growth 0.70×), not longer. Every condition shrinks.
+- **The rising ratio is probably convergence, not a constraint decaying.** Baseline shrinks fastest, so the
+  conditions close in on it as the follow-ups get narrower and leave less to trim (a floor effect).
+- **Turn position and question content are confounded.** Every run asks the same follow-ups in the same order,
+  so a per-turn trend can't be separated from what each later question asks for. Shuffling follow-up order per
+  run would separate them.
+- One model, one temperature, 10 repeats per cell. The unsupported-claim and refusal keyword proxies flag
+  4–100% of runs, mostly known false positives, and are not interpreted.
+
+Earlier data (claude-sonnet-4-20250514, 22 evaluated runs, unbalanced, `artifacts/`): the original summary
+pooled mock, failed, and real runs and was withdrawn (see the README). On those runs turn 0 dominated every
+all-turn metric (5 of 9 baseline runs hit the old 512-token cap), and follow-ups drifted upward
+(+1.5 to +2.9 tokens per turn). The rerun does not reproduce that upward drift on Sonnet 4.6; whether the
+difference is the model or the small sample is open.
 
 ### Analysis plan for the rerun (confirmed 2026-10-16, before the rerun started)
 Fixed before any rerun data existed. Only the 5 pilot runs (`artifacts_pilot/`, used to check cost and
@@ -107,8 +132,9 @@ Analysis:
 - Failed, mock, and unevaluated runs are excluded and reported with counts. No other runs are dropped.
 
 ### Deltas (baseline → verbatim)
-Withdrawn. With n = 2 for verbatim, no delta is reported. Per-model deltas with sample
-sizes are written to `artifacts/summary_deltas.json` for reference only.
+Follow-up turns 1–11 on `claude-sonnet-4-6` (n = 50 each): length 0.59× baseline [0.57, 0.61]; ratio drift
++3.65% per turn [+2.96, +4.31]; turn 0 length 0.38× baseline. All-turn deltas per model are in
+`artifacts_rerun/summary_deltas.json`, but turn 0 dominates them.
 
 ## 8) Tradeoffs and Failure Cases
 Observed or expected tradeoffs:

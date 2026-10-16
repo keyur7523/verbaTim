@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Plan a 1-day migration from SVN to Git for a small repo.",
+    "assistant_text": "## SVN \u2192 Git Migration (1-Day Plan)\n\n### Prerequisites (night before)\n- Install `git-svn` or `svn2git`\n- Collect SVN credentials + repo URL\n- Map SVN usernames \u2192 Git authors (`authors.txt`)\n\n---\n\n### Morning (2\u20133 hrs): Clone & Convert\n\n```bash\n# Option A: git-svn\ngit svn clone SVN_URL --authors-file=authors.txt --no-metadata -s my-repo\n\n# Option B: svn2git (cleaner branch/tag handling)\nsvn2git SVN_URL --authors authors.txt --rootistrunk\n```\n\n- Verify branches and tags converted correctly\n- Check commit history: `git log --oneline`\n\n---\n\n### Midday (1\u20132 hrs): Clean Up\n\n- Remove `git-svn` metadata if present\n- Convert `svn:ignore` \u2192 `.gitignore`\n- Prune empty commits: `git filter-repo --prune-empty`\n- Squash or drop any junk commits\n\n---\n\n### Afternoon (2\u20133 hrs): Push & Validate\n\n```bash\ngit remote add origin GIT_REPO_URL\ngit push -u origin --all\ngit push origin --tags\n```\n\n- Verify all branches/tags on remote\n- Spot-check file contents vs. SVN HEAD\n- Test build/CI on new repo\n\n---\n\n### End of Day: Cut Over\n\n| Step | Action |\n|------|--------|\n| Lock SVN | Set repo to read-only |\n| Notify team | Share new Git URL + basic workflow |\n| Update CI/CD | Point pipelines to Git |\n| Archive SVN | Don't delete \u2014 keep for reference |\n\n---\n\n### Key Risks\n- **Merge history** \u2014 SVN merges don't map cleanly; review manually\n- **Large binaries** \u2014 consider Git LFS before pushing\n- **Missing authors** \u2014 migration halts if `authors.txt` is incomplete"
+  },
+  {
+    "turn_index": 1,
+    "user_text": "List the top 3 risks.",
+    "assistant_text": "From the plan above:\n\n1. **Merge history** \u2014 SVN merges become linear commits; topology is lost\n2. **Large binaries** \u2014 bloat the Git repo permanently if not handled with LFS before first push\n3. **Incomplete `authors.txt`** \u2014 halts migration mid-run; pre-audit SVN users with `svn log | grep \"^r\" | awk '{print $3}' | sort -u`"
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give a short checklist.",
+    "assistant_text": "## Migration Checklist\n\n**Before**\n- [ ] `authors.txt` complete\n- [ ] Git LFS decided on\n- [ ] Git remote created\n\n**During**\n- [ ] Clone/convert succeeds\n- [ ] Branches & tags verified\n- [ ] `.gitignore` from `svn:ignore`\n\n**After**\n- [ ] All branches/tags pushed\n- [ ] CI/CD updated\n- [ ] SVN locked (read-only)\n- [ ] Team notified"
+  },
+  {
+    "turn_index": 3,
+    "user_text": "State one rollback option.",
+    "assistant_text": "Keep SVN read-only (not deleted) \u2014 if Git adoption fails, revert CI/CD to the SVN URL and resume as before. No data loss since SVN was never modified."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "Name one prerequisite.",
+    "assistant_text": "A complete `authors.txt` mapping every SVN username to a Git identity \u2014 migration halts without it."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "What is the fastest validation step?",
+    "assistant_text": "`git log --oneline` \u2014 confirms commit history converted correctly in seconds."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a one-line timeline.",
+    "assistant_text": "Convert (morning) \u2192 Clean up (midday) \u2192 Push & validate (afternoon) \u2192 Cut over (EOD)."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide two tools you might use.",
+    "assistant_text": "`git-svn` and `svn2git`."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "State who should approve the final cutover.",
+    "assistant_text": "The team lead or repo owner \u2014 they confirm history, CI/CD, and team readiness before SVN is locked."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one short communication tip.",
+    "assistant_text": "Send the new Git URL and a one-page cheat sheet of basic Git commands before cutover, not after."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a final recap.",
+    "assistant_text": "## Final Recap\n\n- **Tools:** `git-svn` or `svn2git`\n- **Top risks:** merge history, large binaries, incomplete authors\n- **Timeline:** Convert \u2192 Clean \u2192 Push \u2192 Cut over (1 day)\n- **Rollback:** Keep SVN read-only\n- **Approval:** Team lead signs off\n- **Comms:** Share Git URL + cheat sheet before cutover"
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in short bullets only.",
+    "assistant_text": "- Convert with `git-svn` or `svn2git`\n- Fix authors, binaries, `.gitignore`\n- Validate with `git log --oneline`\n- Team lead approves cutover\n- Lock SVN, notify team, update CI/CD\n- Keep SVN as rollback"
+  }
+]

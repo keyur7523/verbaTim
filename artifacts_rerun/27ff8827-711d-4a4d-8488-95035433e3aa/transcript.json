@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Plan a 1-day migration from SVN to Git for a small repo.",
+    "assistant_text": "# 1-Day SVN \u2192 Git Migration Plan\n\n## Pre-Work (Night Before)\n- [ ] Install `git-svn` or `svn2git`\n- [ ] Audit SVN repo size and history depth\n- [ ] Identify all branches/tags\n- [ ] Collect SVN committer usernames\n\n---\n\n## Morning (2\u20133 hrs)\n\n### 1. Create Authors File (30 min)\n```bash\n# Extract SVN authors\nsvn log svn://your-repo --xml | grep author | sort -u \\\n  | perl -pe 's/.*>(.*?)<.*/$1 = /' > authors.txt\n\n# Fill in Git identities\n# alice = Alice Smith <alice@example.com>\n```\n\n### 2. Clone SVN \u2192 Git (1\u20132 hrs)\n```bash\ngit svn clone svn://your-repo \\\n  --authors-file=authors.txt \\\n  --stdlayout \\          # assumes trunk/branches/tags\n  --no-metadata \\\n  -s my-repo\n```\n> \u26a0\ufe0f Large histories can take longer \u2014 run overnight if needed\n\n---\n\n## Midday (1\u20132 hrs)\n\n### 3. Clean Up Branches & Tags\n```bash\ncd my-repo\n\n# Convert SVN tags to real Git tags\nfor t in $(git branch -r | grep tags/ | sed 's|.*tags/||'); do\n  git tag $t refs/remotes/tags/$t\n  git branch -r -d tags/$t\ndone\n\n# Convert remote branches to local\nfor b in $(git branch -r | grep -v tags/ | grep -v trunk); do\n  git branch $b refs/remotes/$b\ndone\n```\n\n### 4. Verify\n- [ ] `git log --oneline` \u2014 history looks correct\n- [ ] All branches present: `git branch -a`\n- [ ] All tags present: `git tag`\n- [ ] Spot-check 2\u20133 commits for correct author/date\n\n---\n\n## Afternoon (1\u20132 hrs)\n\n### 5. Push to Remote (GitHub/GitLab/etc.)\n```bash\ngit remote add origin https://github.com/org/my-repo.git\ngit push origin --all\ngit push origin --tags\n```\n\n### 6. Validate\n- [ ] Browse repo in UI \u2014 history, branches, tags\n- [ ] Clone fresh copy and build/test\n- [ ] Compare file tree with SVN HEAD\n\n---\n\n## End of Day\n\n### 7. Cutover\n- [ ] Set SVN repo to **read-only**\n- [ ] Update CI/CD to point to Git remote\n- [ ] Notify team with new clone URL\n- [ ] Archive SVN repo URL in docs\n\n---\n\n## Rollback Plan\n> SVN repo stays read-only (not deleted) for **2\u20134 weeks** as safety net\n\n---\n\n## Tools Reference\n| Tool | Best For |\n|------|----------|\n| `git svn` | Built-in, full control |\n| `svn2git` | Cleaner branch/tag handling |\n| Atlassian's importer | GUI option for Bitbucket |"
+  },
+  {
+    "turn_index": 1,
+    "user_text": "List the top 3 risks.",
+    "assistant_text": "## Top 3 Migration Risks\n\n### 1. \ud83e\uddd1\u200d\ud83d\udcbb Incomplete Author Mapping\n**Risk:** Commits get assigned to unknown/generic users, breaking blame/history.\n**Mitigation:** Audit `authors.txt` thoroughly before cloning \u2014 missing entries will **abort** the migration mid-run.\n\n---\n\n### 2. \u23f1\ufe0f History Rewrite Takes Too Long\n**Risk:** Large repos with deep history can take hours, blowing the 1-day window.\n**Mitigation:** Do a trial run on history size (`svn log --limit 1 -r 1:HEAD`) the day before and run the clone **overnight** if needed.\n\n---\n\n### 3. \ud83c\udf3f Branches/Tags Corrupted or Missing\n**Risk:** SVN's non-standard layouts (e.g., nested branches, copies) don't map cleanly to Git refs.\n**Mitigation:** Verify with `git branch -a` and `git tag` post-clone, and manually inspect any SVN branches that weren't under the standard `/branches/` path."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give a short checklist.",
+    "assistant_text": "## Migration Checklist\n\n- [ ] Authors file complete and verified\n- [ ] Trial clone tested before cutover day\n- [ ] All branches and tags confirmed present\n- [ ] History spot-checked (authors, dates, messages)\n- [ ] CI/CD updated to new Git remote\n- [ ] Team notified with new clone URL\n- [ ] SVN repo set to read-only (not deleted)"
+  },
+  {
+    "turn_index": 3,
+    "user_text": "State one rollback option.",
+    "assistant_text": "Keep the SVN repository **read-only but accessible** for 2\u20134 weeks post-migration, so the team can revert to it if critical history or branches are found to be missing or corrupt."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "Name one prerequisite.",
+    "assistant_text": "**`git-svn` must be installed** on the machine running the migration."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "What is the fastest validation step?",
+    "assistant_text": "Run `git log --oneline` and compare the **top commit hash/message against SVN's latest revision** (`svn log -l 1`)."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a one-line timeline.",
+    "assistant_text": "**Morning:** clone \u2192 **Midday:** clean & verify \u2192 **Afternoon:** push & cutover."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide two tools you might use.",
+    "assistant_text": "1. **`git svn`** \u2014 clones SVN history into Git\n2. **`svn2git`** \u2014 cleaner handling of branches and tags"
+  },
+  {
+    "turn_index": 8,
+    "user_text": "State who should approve the final cutover.",
+    "assistant_text": "The **team lead or repository owner** should approve the final cutover."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one short communication tip.",
+    "assistant_text": "Send a single team-wide message with the **new clone URL and cutover time** at least 24 hours in advance."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a final recap.",
+    "assistant_text": "## Final Recap\n\n- **Goal:** Migrate SVN repo to Git in one day\n- **Key Steps:** Map authors \u2192 clone \u2192 clean branches/tags \u2192 verify \u2192 push \u2192 cutover\n- **Top Risks:** Missing authors, long clone time, corrupt branches\n- **Tools:** `git svn`, `svn2git`\n- **Rollback:** Keep SVN read-only for 2\u20134 weeks\n- **Approval:** Team lead signs off on cutover\n- **Communication:** Notify team 24 hrs in advance with new clone URL"
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in short bullets only.",
+    "assistant_text": "- Map authors first\n- Clone with `git svn` or `svn2git`\n- Verify branches, tags, history\n- Push to remote\n- Set SVN read-only\n- Team lead approves cutover\n- Notify team 24 hrs early"
+  }
+]

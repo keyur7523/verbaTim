@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Plan a 1-day migration from SVN to Git for a small repo.",
+    "assistant_text": "# 1-Day SVN \u2192 Git Migration Plan\n\n## Prerequisites (Night Before)\n- [ ] Install `git-svn` or `svn2git`\n- [ ] Notify team: SVN is read-only starting migration day\n- [ ] Back up SVN repo\n- [ ] Collect author list from SVN\n\n---\n\n## Morning (2\u20133 hrs): Prep & Convert\n\n### 1. Freeze SVN (9:00 AM)\n```bash\n# Set repo to read-only or notify team to stop committing\n```\n\n### 2. Build Authors File (9:15 AM)\n```bash\nsvn log https://svn-repo/project -q | \\\n  awk '/^r/ {print $3}' | sort -u | \\\n  sed 's/\\(.*\\)/\\1 = Full Name <email@example.com>/' > authors.txt\n# Edit authors.txt manually to fill in real names/emails\n```\n\n### 3. Clone SVN \u2192 Git (9:30 AM)\n```bash\ngit svn clone https://svn-repo/project \\\n  --authors-file=authors.txt \\\n  --no-metadata \\          # omit git-svn-id lines\n  --stdlayout \\            # assumes trunk/branches/tags\n  -s \\\n  my-project-git\n```\n> \u23f1 Runtime: minutes to hours depending on repo size/history\n\n---\n\n## Midday (1\u20132 hrs): Clean Up\n\n### 4. Convert Tags & Branches (11:00 AM)\n```bash\ncd my-project-git\n\n# Convert remote branches to local\ngit for-each-ref refs/remotes/origin/tags | \\\n  cut -d/ -f5- | while read tag; do\n    git tag \"$tag\" \"refs/remotes/origin/tags/$tag\"\n    git branch -r -d \"origin/tags/$tag\"\n  done\n\n# Convert remaining remote branches to local\ngit for-each-ref refs/remotes | \\\n  cut -d/ -f4- | grep -v HEAD | while read branch; do\n    git branch \"$branch\" \"refs/remotes/$branch\"\n    git branch -r -d \"$branch\"\n  done\n```\n\n### 5. Verify History (11:30 AM)\n```bash\ngit log --oneline | head -20\ngit branch -a\ngit tag\n```\n\n---\n\n## Early Afternoon (1 hr): Push to Remote\n\n### 6. Create Remote Repo (12:30 PM)\n- Create empty repo on GitHub / GitLab / Bitbucket\n\n### 7. Push Everything (12:45 PM)\n```bash\ngit remote add origin https://github.com/org/my-project.git\ngit push origin --all\ngit push origin --tags\n```\n\n---\n\n## Late Afternoon (2 hrs): Team Onboarding\n\n### 8. Each Developer Runs (2:00 PM)\n```bash\ngit clone https://github.com/org/my-project.git\n```\n\n### 9. Update CI/CD & Tooling (2:30 PM)\n- [ ] Update pipeline repo URLs\n- [ ] Update webhooks/integrations\n- [ ] Update README badges/links\n- [ ] Disable/archive SVN repo\n\n### 10. Smoke Test (3:30 PM)\n- [ ] Open a test PR/MR\n- [ ] Verify CI passes\n- [ ] Confirm team can push/pull\n\n---\n\n## Rollback Plan\n> If something goes wrong before 2 PM \u2192 re-enable SVN, reschedule\n\n---\n\n## Quick Reference: Tool Choice\n\n| Tool | Best For |\n|------|----------|\n| `git svn` | Built-in, simple repos |\n| `svn2git` | Cleaner tag/branch handling |\n| `reposurgeon` | Complex history surgery |"
+  },
+  {
+    "turn_index": 1,
+    "user_text": "List the top 3 risks.",
+    "assistant_text": "## Top 3 Migration Risks\n\n### 1. \ud83e\uddd1\u200d\ud83d\udcbb Commits During Migration\n**Risk:** Someone commits to SVN after freeze, changes are lost.\n**Mitigation:** Hard read-only lock on SVN repo, not just a verbal agreement.\n\n---\n\n### 2. \ud83d\udc64 Incomplete Authors File\n**Risk:** Unknown SVN usernames cause conversion to fail or produce garbage author data in Git history.\n**Mitigation:** Audit `authors.txt` completely before running clone \u2014 add `--authors-prog` fallback for unknowns.\n\n---\n\n### 3. \ud83c\udf3f Mangled Branches/Tags\n**Risk:** Non-standard SVN layouts (e.g., nested branches, multiple trunk copies) convert incorrectly or are silently dropped.\n**Mitigation:** Audit `git branch -a` and `git tag` output against SVN before pushing; spot-check commit counts per branch."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give a short checklist.",
+    "assistant_text": "## Migration Checklist\n\n**Before**\n- [ ] Back up SVN repo\n- [ ] Freeze SVN (read-only)\n- [ ] Complete `authors.txt`\n\n**During**\n- [ ] Verify branch/tag count matches SVN\n- [ ] Spot-check commit history\n\n**After**\n- [ ] Push all branches and tags\n- [ ] Update CI/CD URLs\n- [ ] Archive SVN repo\n- [ ] Team confirms clone + push works"
+  },
+  {
+    "turn_index": 3,
+    "user_text": "State one rollback option.",
+    "assistant_text": "Re-enable SVN read/write access \u2014 since you froze it (not deleted it), it remains a full fallback until you're confident the Git migration is verified."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "Name one prerequisite.",
+    "assistant_text": "`git-svn` must be installed before migration day."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "What is the fastest validation step?",
+    "assistant_text": "Run `git log --oneline | head -20` and confirm the most recent commits match SVN's last known commits."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a one-line timeline.",
+    "assistant_text": "Freeze SVN \u2192 Convert \u2192 Clean up \u2192 Push \u2192 Onboard team \u2192 Archive SVN (all within one business day)."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide two tools you might use.",
+    "assistant_text": "`git svn` and `svn2git`."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "State who should approve the final cutover.",
+    "assistant_text": "The team lead or project owner."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one short communication tip.",
+    "assistant_text": "Send a calendar invite to the whole team marking the exact SVN freeze time so no one commits at the wrong moment."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a final recap.",
+    "assistant_text": "## Final Recap\n\nFreeze SVN, convert history with `git svn` or `svn2git`, clean up branches/tags, push to remote, update CI/CD, and archive SVN \u2014 all in one day. Key risks are rogue commits, bad author data, and mangled branches. Team lead approves cutover, and everyone confirms clone + push works before SVN is retired."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in short bullets only.",
+    "assistant_text": "- Freeze SVN first\n- Convert with `git svn` or `svn2git`\n- Clean up branches and tags\n- Verify history matches\n- Push all branches and tags\n- Update CI/CD URLs\n- Team lead approves cutover\n- Team confirms clone + push\n- Archive SVN"
+  }
+]

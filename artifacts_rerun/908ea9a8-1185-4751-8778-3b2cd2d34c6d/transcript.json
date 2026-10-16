@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Summarize the benefits of code review for a small team.",
+    "assistant_text": "**Benefits of Code Review for Small Teams**\n\n- **Quality** \u2013 Catches bugs and logic errors before they reach production\n- **Knowledge sharing** \u2013 Spreads context so no one becomes a single point of failure\n- **Consistency** \u2013 Enforces style and architecture standards across the codebase\n- **Mentorship** \u2013 Junior devs learn faster through direct feedback\n- **Accountability** \u2013 Encourages cleaner, more deliberate code when others will read it\n- **Early design feedback** \u2013 Cheaper to fix structural issues in review than post-merge"
+  },
+  {
+    "turn_index": 1,
+    "user_text": "Give a one-sentence summary.",
+    "assistant_text": "Code review improves quality, spreads knowledge, and keeps small teams aligned through collaborative feedback."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "List two concrete benefits.",
+    "assistant_text": "1. **Bug detection** \u2013 Catches errors before they reach production.\n2. **Knowledge sharing** \u2013 Ensures no single person is the only one who understands a piece of code."
+  },
+  {
+    "turn_index": 3,
+    "user_text": "Name one cultural benefit.",
+    "assistant_text": "Code review builds a culture of **shared ownership**, where everyone feels responsible for the quality of the codebase\u2014not just the original author."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "State one risk if reviews are skipped.",
+    "assistant_text": "Knowledge silos form, leaving the team vulnerable if a key developer leaves or is unavailable."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "Provide one metric to track.",
+    "assistant_text": "**Review turnaround time** \u2013 measures how quickly pull requests receive feedback, helping identify bottlenecks in the review process."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a short concluding line.",
+    "assistant_text": "Consistent code review is a small investment that pays dividends in quality, collaboration, and long-term maintainability."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Answer in bullets only.",
+    "assistant_text": "- Consistent code review pays dividends in quality, collaboration, and maintainability."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "Provide a final one-line recap.",
+    "assistant_text": "Code review is a simple practice with outsized impact on team quality and cohesion."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Offer one caveat.",
+    "assistant_text": "Reviews can slow delivery if not timeboxed or prioritized alongside other work."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Restate in 10 words.",
+    "assistant_text": "Unmanaged reviews risk becoming bottlenecks that delay shipping working software."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Provide a final short summary.",
+    "assistant_text": "Code review boosts quality and collaboration, but must be kept efficient to avoid slowing the team down."
+  }
+]

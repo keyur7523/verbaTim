@@ -1,0 +1,62 @@
+{
+  "artifact_schema_version": 2,
+  "run_id": "bb9a8b6c-717c-47a7-9559-01cbdde7676e",
+  "model": "claude-sonnet-4-6",
+  "backend": "anthropic",
+  "length_unit": "provider_tokens",
+  "intent_id": "concept_explanation",
+  "condition": "budgeted",
+  "temperature": 0.2,
+  "token_budget": 120,
+  "max_tokens": 4096,
+  "timestamp": "2026-10-16T22:09:06.842556",
+  "status": "completed",
+  "error": null,
+  "metrics": {
+    "metrics": {
+      "mean_tokens_per_turn": 45.416666666666664,
+      "drift_slope": -3.9055944055944054,
+      "length_stddev": 31.10588993886671,
+      "growth_ratio": 0.5523809523809523
+    },
+    "fallback_rate": 0.0,
+    "turn_stop_reasons": [
+      "end_turn",
+      "end_turn",
+      "end_turn",
+      "end_turn",
+      "end_turn",
+      "end_turn",
+      "end_turn",
+      "end_turn",
+      "end_turn",
+      "end_turn",
+      "end_turn",
+      "end_turn"
+    ],
+    "truncated_turns": [],
+    "thinking_used": false,
+    "thresholds": {
+      "max_drift_slope": 3.0,
+      "max_growth_ratio": 1.2,
+      "max_stddev_ratio": 0.35,
+      "max_fallback_rate": 0.15
+    },
+    "checks": {
+      "drift_slope": true,
+      "growth_ratio": true,
+      "length_stddev": false,
+      "fallback_rate": true
+    }
+  },
+  "passed": false,
+  "parameters": {
+    "backend": "anthropic",
+    "length_unit": "provider_tokens",
+    "requested_model_id": "claude-sonnet-4-6",
+    "temperature": 0.2,
+    "token_budget": 120,
+    "max_tokens": 4096,
+    "max_turns": 12
+  }
+}

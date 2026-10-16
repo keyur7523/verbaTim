@@ -1,9 +1,15 @@
+from collections import Counter
 from pathlib import Path
 import csv
 import json
 
+import pytest
+
 from verbatim.analysis.contamination import run_dir_mock_reasons
 from verbatim.experiments.run_conversations import REQUIRED_RUN_FIELDS
+
+# Every directory of committed run artifacts.
+COMMITTED_RUN_DIRS = ["artifacts", "artifacts_rerun"]
 
 
 def test_artifacts_exist_if_docs_reference_them():
@@ -35,16 +41,18 @@ def test_backend_venv_not_present_and_ignored():
     assert "backend/venv/" in gitignore
 
 
-def test_committed_artifacts_are_real_completed_runs():
-    for path in Path("artifacts").glob("*/aggregate_metrics.json"):
+@pytest.mark.parametrize("root", COMMITTED_RUN_DIRS)
+def test_committed_artifacts_are_real_completed_runs(root):
+    for path in Path(root).glob("*/aggregate_metrics.json"):
         payload = json.loads(path.read_text(encoding="utf-8"))
         assert payload.get("status") == "completed", path
         assert payload.get("model") not in (None, "", "mock-echo"), path
         assert payload.get("backend") != "mock", path
 
 
-def test_committed_transcripts_do_not_look_like_mock_output():
-    run_dirs = [path.parent for path in Path("artifacts").glob("*/aggregate_metrics.json")]
+@pytest.mark.parametrize("root", COMMITTED_RUN_DIRS)
+def test_committed_transcripts_do_not_look_like_mock_output(root):
+    run_dirs = [path.parent for path in Path(root).glob("*/aggregate_metrics.json")]
     flagged = {run_dir.name: run_dir_mock_reasons(run_dir)[:3] for run_dir in run_dirs}
     assert not {name: reasons for name, reasons in flagged.items() if reasons}
 
@@ -53,8 +61,9 @@ def test_committed_transcripts_do_not_look_like_mock_output():
 LEGACY_REQUIRED_FIELDS = ("run_id", "model", "intent_id", "condition", "timestamp", "status")
 
 
-def test_committed_artifacts_have_run_metadata():
-    for path in Path("artifacts").glob("*/aggregate_metrics.json"):
+@pytest.mark.parametrize("root", COMMITTED_RUN_DIRS)
+def test_committed_artifacts_have_run_metadata(root):
+    for path in Path(root).glob("*/aggregate_metrics.json"):
         payload = json.loads(path.read_text(encoding="utf-8"))
         if payload.get("artifact_schema_version", 1) < 2:
             for field in LEGACY_REQUIRED_FIELDS:
@@ -67,8 +76,22 @@ def test_committed_artifacts_have_run_metadata():
             assert payload[field] is not None, (path, field)
 
 
-def test_committed_summary_reports_provider_tokens_only():
-    with Path("artifacts/summary.csv").open("r", encoding="utf-8") as handle:
+@pytest.mark.parametrize("root", COMMITTED_RUN_DIRS)
+def test_committed_summary_reports_provider_tokens_only(root):
+    with Path(root, "summary.csv").open("r", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
     assert rows
     assert {row["length_unit"] for row in rows} == {"provider_tokens"}
+
+
+def test_rerun_matches_the_preregistered_design():
+    payloads = [json.loads(p.read_text(encoding="utf-8")) for p in Path("artifacts_rerun").glob("*/aggregate_metrics.json")]
+    assert len(payloads) == 200
+    assert {p["model"] for p in payloads} == {"claude-sonnet-4-6"}
+    assert {p["backend"] for p in payloads} == {"anthropic"}
+    assert {p["temperature"] for p in payloads} == {0.2}
+    assert {p["max_tokens"] for p in payloads} == {4096}
+    assert {p["token_budget"] for p in payloads if p["condition"] == "budgeted"} == {120}
+    cells = Counter((p["intent_id"], p["condition"]) for p in payloads)
+    assert len(cells) == 20
+    assert set(cells.values()) == {10}

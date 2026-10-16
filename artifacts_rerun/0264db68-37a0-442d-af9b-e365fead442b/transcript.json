@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Explain what a hash table is and when to use it.",
+    "assistant_text": "## Hash Table\n\nA **hash table** stores key-value pairs using a **hash function** to map keys to array indices for fast lookup.\n\n**How it works:**\n1. Key \u2192 hash function \u2192 index\n2. Value stored at that index\n\n**Time Complexity:**\n- Average: O(1) for get/set/delete\n- Worst case: O(n) (collisions)\n\n**Use when you need:**\n- Fast lookups by key\n- Counting/frequency tracking\n- Caching results\n- Removing duplicates\n- Grouping related data\n\n**Avoid when:**\n- Order matters (use sorted array/tree)\n- Memory is very limited"
+  },
+  {
+    "turn_index": 1,
+    "user_text": "Summarize the key benefit in one sentence.",
+    "assistant_text": "Hash tables provide **O(1) average-time lookups** by mapping keys directly to values via a hash function."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give one practical example in everyday apps.",
+    "assistant_text": "A web browser uses a hash table to store **cached pages**, instantly retrieving previously visited sites by their URL as the key."
+  },
+  {
+    "turn_index": 3,
+    "user_text": "Name one tradeoff compared to a balanced tree.",
+    "assistant_text": "Hash tables offer faster average lookups but **no ordering**, while balanced trees maintain sorted order for range queries at O(log n) cost."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "List two common pitfalls.",
+    "assistant_text": "1. **Collisions** \u2013 Poor hash functions cluster keys, degrading performance to O(n).\n2. **Resizing cost** \u2013 When the table fills up, rehashing all keys causes a sudden O(n) slowdown."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "State the average time complexity for lookup.",
+    "assistant_text": "**O(1)** average time for lookup."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "What is a good alternative when memory is tight?",
+    "assistant_text": "A **balanced BST** (like a Red-Black tree) uses less memory by storing only the data, with no empty slots or load-factor overhead."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide one short analogy.",
+    "assistant_text": "A hash table is like a **filing cabinet with labeled folders**\u2014instead of searching every folder, you go directly to the right one by name."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "Describe when I should not use it.",
+    "assistant_text": "Avoid hash tables when you need **sorted data, range queries, or ordered iteration**\u2014use a balanced tree or sorted array instead."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one reason it can be faster than a list.",
+    "assistant_text": "A hash table jumps **directly to a value by key** in O(1), while a list must scan every element in O(n)."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a one-line recap.",
+    "assistant_text": "Hash tables enable instant key-based lookups by trading memory for speed."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in a short bullet list.",
+    "assistant_text": "- Stores key-value pairs\n- Uses hashing for O(1) lookups\n- Trades memory for speed\n- Best for fast retrieval, not ordering"
+  }
+]

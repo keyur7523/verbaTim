@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Plan a 1-day migration from SVN to Git for a small repo.",
+    "assistant_text": "# 1-Day SVN to Git Migration Plan\n\n## Pre-Migration Checklist (Night Before)\n\n- [ ] Notify all team members \u2014 **freeze SVN commits** during migration\n- [ ] Confirm Git hosting destination (GitHub, GitLab, Bitbucket, self-hosted)\n- [ ] Ensure you have admin access to both SVN and Git servers\n- [ ] Back up the SVN repository\n\n```bash\n# Backup SVN repo\nsvnadmin dump /path/to/svn/repo > svn_backup.dump\n```\n\n---\n\n## Morning: Preparation (2\u20133 hours)\n\n### 1. Install Required Tools\n```bash\n# macOS\nbrew install git git-svn svn\n\n# Ubuntu/Debian\nsudo apt install git git-svn subversion\n\n# Verify\ngit svn --version\n```\n\n### 2. Build Authors File\nMap SVN usernames \u2192 Git identities (required for commit history).\n\n```bash\n# Extract all SVN authors automatically\nsvn log svn://your-repo-url --quiet \\\n  | grep \"^r\" \\\n  | awk '{print $3}' \\\n  | sort -u > authors.txt\n```\n\nEdit `authors.txt` into this format:\n```\njsmith = John Smith <john.smith@company.com>\nmjones = Mary Jones <mary.jones@company.com>\n(no author) = Legacy User <legacy@company.com>\n```\n\n### 3. Identify Your SVN Layout\n\n| Layout Type | Description |\n|---|---|\n| **Standard** | Has `/trunk`, `/branches`, `/tags` |\n| **Non-standard** | Custom folder structure |\n\n```bash\n# Inspect structure\nsvn ls svn://your-repo-url\n```\n\n---\n\n## Midday: Migration (2\u20134 hours)\n\n### 4. Clone SVN \u2192 Git\n\n**Standard layout:**\n```bash\ngit svn clone svn://your-repo-url \\\n  --stdlayout \\\n  --authors-file=authors.txt \\\n  --no-metadata \\\n  -A authors.txt \\\n  my-new-git-repo\n```\n\n**Non-standard layout:**\n```bash\ngit svn clone svn://your-repo-url \\\n  --trunk=trunk \\\n  --branches=branches \\\n  --tags=releases \\\n  --authors-file=authors.txt \\\n  my-new-git-repo\n```\n\n> \u23f1\ufe0f **Time varies** \u2014 expect ~1 min per 1,000 revisions\n\n### 5. Convert SVN Branches & Tags\n```bash\ncd my-new-git-repo\n\n# Convert remote SVN branches to local Git branches\nfor branch in $(git branch -r | grep -v \"tags/\" | grep -v \"trunk\"); do\n  git branch \"${branch##*/}\" \"refs/remotes/$branch\"\ndone\n\n# Convert SVN tags to proper Git tags\nfor tag in $(git branch -r | grep \"tags/\"); do\n  git tag \"${tag##*/tags/}\" \"$tag\"\n  git branch -d -r \"$tag\"\ndone\n```\n\n### 6. Clean Up\n```bash\n# Remove git-svn tracking references\ngit branch -d -r trunk\ngit remote rm origin  # removes svn remote if present\n\n# Verify history looks correct\ngit log --oneline --graph --all | head -30\n```\n\n---\n\n## Afternoon: Validation & Push (1\u20132 hours)\n\n### 7. Validate Migration\n\n```bash\n# Compare commit counts\nsvn log svn://your-repo-url | grep \"^r\" | wc -l\ngit log --oneline | wc -l\n\n# Spot-check specific commits\ngit log --all --oneline\n\n# Verify branches\ngit branch -a\n\n# Verify tags\ngit tag -l\n```\n\n### 8. Push to Remote Git Host\n```bash\n# Add your new Git remote\ngit remote add origin git@github.com:yourorg/your-repo.git\n\n# Push everything\ngit push origin --all      # all branches\ngit push origin --tags     # all tags\n```\n\n---\n\n## Late Afternoon: Team Cutover (1 hour)\n\n### 9. Team Instructions\nSend this to every developer:\n\n```bash\n# Each developer runs this \u2014 DO NOT migrate their local SVN working copy\ngit clone git@github.com:yourorg/your-repo.git\ncd your-repo\n\n# Set identity if not globally configured\ngit config user.name \"Your Name\"\ngit config user.email \"you@company.com\"\n```\n\n### 10. Lock Down SVN\n- Set SVN repo to **read-only** (don't delete it yet)\n- Update CI/CD pipelines to point to Git\n- Update any documentation, wikis, README links\n\n```bash\n# Example: make SVN read-only via hook\necho \"#!/bin/sh\necho 'SVN is read-only. Use Git.' >&2\nexit 1\" > /path/to/svn/repo/hooks/pre-commit\nchmod +x /path/to/svn/repo/hooks/pre-commit\n```\n\n---\n\n## End of Day: Sign-Off Checklist\n\n| Task | Done? |\n|---|---|\n| Full commit history preserved | \u2610 |\n| All branches migrated | \u2610 |\n| All tags migrated | \u2610 |\n| Authors correctly mapped | \u2610 |\n| CI/CD updated | \u2610 |\n| Team successfully cloned | \u2610 |\n| SVN set to read-only | \u2610 |\n| SVN backup stored safely | \u2610 |\n\n---\n\n## Troubleshooting Quick Reference\n\n| Problem | Fix |\n|---|---|\n| `Author not defined` error | Add missing user to `authors.txt` and re-run |\n| Clone hangs/times out | Use `--revision HEAD:1` to clone in reverse, or clone in chunks |\n| Tags show as branches | Re-run the tag conversion script in Step 5 |\n| Binary files corrupted | Check SVN `svn:mime-type` properties before migration |\n| Large repo is slow | Use `svn2git` tool as an alternative to `git svn` |\n\n---\n\n> **\ud83d\udca1 Tip:** Keep the SVN repo alive (read-only) for **30\u201360 days** as a reference before decommissioning."
+  },
+  {
+    "turn_index": 1,
+    "user_text": "List the top 3 risks.",
+    "assistant_text": "## Top 3 Migration Risks\n\n### 1. \ud83e\uddd1\u200d\ud83d\udcbc Incomplete Author Mapping\n**What goes wrong:** Any SVN username missing from `authors.txt` causes the clone to **halt mid-migration**, forcing a restart.\n\n**Impact:** Wasted hours, missed timeline.\n\n**Mitigation:**\n```bash\n# Validate authors file is complete BEFORE cloning\nsvn log svn://your-repo-url --quiet \\\n  | grep \"^r\" | awk '{print $3}' \\\n  | sort -u > all_authors.txt\n# Manually confirm every name has a Git identity mapped\n```\n\n---\n\n### 2. \ud83c\udf3f Branch & Tag History Loss\n**What goes wrong:** SVN branches/tags are folders, not first-class objects. Merges and copies often **don't translate cleanly** to Git, resulting in orphaned or missing history.\n\n**Impact:** Corrupted project history that is hard to fix after the team has started committing.\n\n**Mitigation:**\n- Audit `git log --all --graph` immediately after clone\n- Spot-check 2\u20133 known branches against SVN history before pushing\n\n---\n\n### 3. \u23f0 SVN Commit Freeze Violations\n**What goes wrong:** A developer commits to SVN **during migration**, causing the Git copy to be out of sync the moment it's pushed.\n\n**Impact:** Lost commits, manual reconciliation, or a full re-migration.\n\n**Mitigation:**\n- Enforce the pre-commit read-only hook **before** starting the clone\n- Confirm with the whole team \u2014 not just developers (check CI bots, scripts, scheduled jobs)\n\n---\n\n> **Bottom line:** Author mapping breaks the process, branch loss corrupts history, and freeze violations invalidate the result. All three are **preventable with preparation done the night before.**"
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give a short checklist.",
+    "assistant_text": "## Pre-Migration Checklist\n\n- [ ] Freeze SVN commits (including CI bots & scheduled jobs)\n- [ ] Back up the SVN repository\n- [ ] Extract and verify **all** authors are mapped in `authors.txt`\n- [ ] Audit branch/tag structure before cloning\n- [ ] Validate commit counts and spot-check history after clone\n- [ ] Set SVN to read-only before team cutover"
+  },
+  {
+    "turn_index": 3,
+    "user_text": "State one rollback option.",
+    "assistant_text": "If the migration fails or history is corrupted, **re-enable the SVN pre-commit hook and direct the team back to SVN** while you restart the migration from the backup dump.\n\n```bash\n# Restore SVN from backup\nsvnadmin load /path/to/svn/repo < svn_backup.dump\n```\n\n> This works because SVN was never deleted \u2014 only set to read-only."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "Name one prerequisite.",
+    "assistant_text": "**Git SVN must be installed** on the machine running the migration.\n\n```bash\n# Verify it's available\ngit svn --version\n```\n\n> Without this, the `git svn clone` command will fail immediately and nothing can proceed."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "What is the fastest validation step?",
+    "assistant_text": "**Compare commit counts** between SVN and Git.\n\n```bash\n# SVN count\nsvn log svn://your-repo-url --quiet | grep \"^r\" | wc -l\n\n# Git count\ngit log --oneline | wc -l\n```\n\n> Takes seconds and immediately confirms whether history was fully transferred. If the numbers don't match, something went wrong before pushing anything."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a one-line timeline.",
+    "assistant_text": "**Morning:** Prep & author mapping \u2192 **Midday:** Clone & convert \u2192 **Afternoon:** Validate & push \u2192 **End of day:** Team cutover & SVN locked."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide two tools you might use.",
+    "assistant_text": "1. **`git svn`** \u2014 built into Git; handles the core SVN-to-Git clone and branch/tag conversion.\n2. **`svn2git`** \u2014 a wrapper tool that automates and simplifies the full migration, including branch and tag cleanup."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "State who should approve the final cutover.",
+    "assistant_text": "The **project or team lead** should approve the final cutover, confirming that history is validated, all developers are notified, and CI/CD pipelines are updated before SVN is locked."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one short communication tip.",
+    "assistant_text": "Send a single team-wide message **the day before** with the exact freeze time, the new Git repo URL, and the clone command ready to copy-paste \u2014 so no one has an excuse to be unprepared."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a final recap.",
+    "assistant_text": "## Final Recap\n\n| Phase | Key Action |\n|---|---|\n| **Prep** | Back up SVN, map all authors, freeze commits |\n| **Migration** | Clone with `git svn`, convert branches and tags |\n| **Validation** | Compare commit counts, spot-check history |\n| **Cutover** | Push to Git, lock SVN, update CI/CD |\n| **Communication** | Notify team the day before with clone command ready |\n\n**Top 3 risks:** Author mapping gaps, branch/tag history loss, freeze violations.\n\n**Rollback:** Restore SVN from backup dump and re-enable commits.\n\n**Approval:** Team or project lead signs off before SVN is locked.\n\n> Migration done right takes one focused day \u2014 the preparation the night before is what makes or breaks it."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in short bullets only.",
+    "assistant_text": "- Prep the night before \u2014 backup, authors file, commit freeze\n- Migrate midday using `git svn clone`\n- Validate with commit count comparison\n- Team lead approves cutover\n- Push to Git, lock SVN, update CI/CD\n- Rollback via SVN backup dump if needed"
+  }
+]

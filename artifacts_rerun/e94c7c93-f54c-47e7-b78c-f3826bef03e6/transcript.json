@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Plan a 1-day migration from SVN to Git for a small repo.",
+    "assistant_text": "# 1-Day SVN to Git Migration Plan\n\n## Pre-Migration Checklist (Night Before)\n\n- [ ] Notify all team members \u2014 **freeze SVN commits** during migration\n- [ ] Confirm you have admin access to both SVN and new Git host (GitHub/GitLab/Bitbucket)\n- [ ] Back up the SVN repository\n\n```bash\n# Backup SVN repo\nsvnadmin dump /path/to/svn/repo > svn_backup.dump\n```\n\n---\n\n## Morning: Preparation (8:00\u201310:00 AM)\n\n### 1. Install Prerequisites\n```bash\n# macOS\nbrew install git git-svn svn\n\n# Ubuntu/Debian\nsudo apt install git git-svn subversion\n```\n\n### 2. Build Authors File\nMap SVN usernames \u2192 Git identities (required for commit history).\n\n```bash\n# Extract all SVN authors automatically\nsvn log svn://your-repo-url --quiet \\\n  | grep \"^r\" \\\n  | awk '{print $3}' \\\n  | sort -u > authors.txt\n```\n\nEdit `authors.txt` into this format:\n```\njsmith = John Smith <john.smith@company.com>\nmjones = Mary Jones <mary.jones@company.com>\n(no author) = Legacy User <legacy@company.com>\n```\n\n### 3. Create the Git Repository on Your Host\n- Create a **new empty repo** on GitHub/GitLab (no README, no .gitignore)\n- Copy the remote URL for later\n\n---\n\n## Mid-Morning: Clone SVN \u2192 Git (10:00 AM\u201312:00 PM)\n\n### Standard Layout (trunk/branches/tags)\n```bash\ngit svn clone svn://your-repo-url \\\n  --stdlayout \\\n  --authors-file=authors.txt \\\n  --no-metadata \\\n  -A authors.txt \\\n  my-git-repo\n```\n\n### Non-Standard Layout (no branches/tags)\n```bash\ngit svn clone svn://your-repo-url \\\n  --authors-file=authors.txt \\\n  --no-metadata \\\n  my-git-repo\n```\n\n> \u23f1\ufe0f **Time varies** \u2014 small repos usually finish in minutes. Grab coffee.\n\n---\n\n## Midday: Clean Up the Repo (12:00\u20131:00 PM)\n\n```bash\ncd my-git-repo\n```\n\n### Convert SVN Branches \u2192 Git Branches\n```bash\n# List remote SVN branches\ngit branch -r\n\n# Convert each branch\ngit checkout -b feature-x refs/remotes/feature-x\n```\n\n### Convert SVN Tags \u2192 Git Tags\n```bash\n# Convert all SVN tags to proper Git tags\nfor tag in $(git branch -r | grep \"tags/\" | sed 's/.*tags\\///'); do\n  git tag \"$tag\" \"refs/remotes/tags/$tag\"\n  git branch -r -d \"tags/$tag\"\ndone\n```\n\n### Add a .gitignore\n```bash\n# Convert SVN ignores to .gitignore\ngit svn show-ignore > .gitignore\ngit add .gitignore\ngit commit -m \"chore: add .gitignore from SVN properties\"\n```\n\n### Remove SVN Tracking Refs\n```bash\ngit branch -r | grep -v HEAD | xargs -I{} git branch -rd {}\n```\n\n---\n\n## Afternoon: Verify & Push (1:00\u20133:00 PM)\n\n### Verify History\n```bash\n# Check commit count matches SVN\ngit log --oneline | wc -l\n\n# Spot-check commits\ngit log --oneline -20\n\n# Check branches and tags\ngit branch -a\ngit tag -l\n```\n\n### Push to Remote\n```bash\ngit remote add origin https://github.com/your-org/your-repo.git\n\n# Push main branch\ngit push -u origin main\n\n# Push all branches\ngit push origin --all\n\n# Push all tags\ngit push origin --tags\n```\n\n---\n\n## Late Afternoon: Team Onboarding (3:00\u20135:00 PM)\n\n### Each Developer Runs\n```bash\n# Clone the new repo\ngit clone https://github.com/your-org/your-repo.git\n\n# Verify history is intact\ngit log --oneline\n```\n\n### Update These Immediately\n| Item | Action |\n|------|--------|\n| CI/CD pipelines | Point to new Git repo URL |\n| Issue tracker | Update repo links |\n| README/docs | Update clone instructions |\n| Webhooks | Reconfigure for Git events |\n| SVN repo | Set to **read-only** (don't delete yet) |\n\n---\n\n## End of Day: Sign-Off Checklist\n\n- [ ] All branches migrated\n- [ ] All tags migrated\n- [ ] Full commit history preserved\n- [ ] `.gitignore` in place\n- [ ] CI/CD pipeline passing on new repo\n- [ ] Team successfully cloned and can push\n- [ ] SVN repo set to read-only\n- [ ] Migration documented in team wiki\n\n---\n\n## Rollback Plan\n> If something goes wrong, SVN is still intact and read-only.\n\n```bash\n# Re-enable SVN writes if needed\n# Simply revert the read-only setting on your SVN server\n# No data was deleted during this process\n```\n\n---\n\n## Quick Reference: Common Issues\n\n| Problem | Fix |\n|---------|-----|\n| Unknown author error | Add missing user to `authors.txt` and re-run |\n| Empty branches | Check `git branch -r` for remote refs |\n| Large repo taking too long | Use `--revision HEAD:1` to clone in reverse |\n| Tags showing as branches | Re-run the tag conversion loop above |\n\n---\n\n**Total estimated time: 6\u20138 hours** for a small repo with a small team. The clone step is the longest \u2014 everything else is configuration. \ud83d\ude80"
+  },
+  {
+    "turn_index": 1,
+    "user_text": "List the top 3 risks.",
+    "assistant_text": "Based on the migration plan above, the top 3 risks are:\n\n---\n\n## Top 3 Migration Risks\n\n### 1. \ud83d\udd53 Incomplete or Corrupted Commit History\n**What can go wrong:** Missing authors in `authors.txt` will cause `git svn clone` to **abort mid-clone**, and SVN externals, binary files, or merge tracking metadata may not translate cleanly to Git.\n\n**Mitigation:**\n- Extract and verify the authors file **completely** before cloning\n- Audit commit counts and spot-check key commits after migration\n- Keep the SVN backup (`svn_backup.dump`) until fully verified\n\n---\n\n### 2. \ud83d\udd00 Branches and Tags Not Migrating Correctly\n**What can go wrong:** SVN branches and tags are just folders by convention \u2014 `git svn` may import them as **remote tracking refs instead of real Git branches/tags**, or miss them entirely if the repo uses a non-standard layout.\n\n**Mitigation:**\n- Run `git branch -r` after cloning to audit every remote ref\n- Manually verify the tag conversion loop worked with `git tag -l`\n- Test checkout of each branch before pushing to remote\n\n---\n\n### 3. \ud83d\udea8 Team Continues Committing to SVN During Migration\n**What can go wrong:** If the SVN freeze isn't enforced, commits made during migration will be **permanently lost** \u2014 they won't exist in Git and the SVN repo will be retired.\n\n**Mitigation:**\n- Communicate the freeze window clearly the day before\n- **Set SVN to read-only** at the start of migration, not the end\n- Schedule during low-activity hours (early morning or Friday evening)\n\n---\n\n> **Biggest single risk:** #3 \u2014 it's the only one that causes **unrecoverable data loss** if the SVN backup is also discarded too early."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give a short checklist.",
+    "assistant_text": "## Migration Risk Checklist\n\n### 1. \ud83d\udd53 Commit History\n- [ ] All SVN authors mapped in `authors.txt` before cloning\n- [ ] Commit count matches between SVN and Git\n- [ ] Key commits spot-checked after migration\n\n### 2. \ud83d\udd00 Branches & Tags\n- [ ] All branches verified with `git branch -r` post-clone\n- [ ] All tags verified with `git tag -l` post-conversion\n- [ ] Each branch successfully checked out before push\n\n### 3. \ud83d\udea8 SVN Freeze\n- [ ] Team notified of freeze window day before\n- [ ] SVN set to **read-only at migration start**\n- [ ] SVN backup retained until Git repo fully verified"
+  },
+  {
+    "turn_index": 3,
+    "user_text": "State one rollback option.",
+    "assistant_text": "If the migration fails at any point, **re-enable write access to the SVN repository.**\n\n> The original SVN repo is untouched throughout the entire migration process \u2014 it is the single source of truth until the Git repo is fully verified and signed off."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "Name one prerequisite.",
+    "assistant_text": "**An authors file mapping every SVN username to a Git identity.**\n\n> Without this, `git svn clone` will abort mid-migration when it encounters an unknown author."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "What is the fastest validation step?",
+    "assistant_text": "**Compare commit counts between SVN and Git.**\n\n```bash\n# SVN count\nsvn log svn://your-repo-url --quiet | grep \"^r\" | wc -l\n\n# Git count\ngit log --oneline | wc -l\n```\n\n> Takes seconds to run and immediately confirms whether history was fully transferred."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a one-line timeline.",
+    "assistant_text": "**Prep (8\u201310AM) \u2192 Clone (10AM\u201312PM) \u2192 Clean up (12\u20131PM) \u2192 Verify & Push (1\u20133PM) \u2192 Team onboarding (3\u20135PM)**"
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide two tools you might use.",
+    "assistant_text": "1. **`git svn`** \u2014 clones the SVN repository and converts history to Git commits\n2. **`svnadmin`** \u2014 backs up the SVN repository before migration begins"
+  },
+  {
+    "turn_index": 8,
+    "user_text": "State who should approve the final cutover.",
+    "assistant_text": "**The team lead or repository owner** \u2014 they are accountable for confirming that history, branches, tags, and CI/CD pipelines are verified before SVN is set permanently to read-only."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one short communication tip.",
+    "assistant_text": "**Send a single clear message to the whole team the day before, stating the exact freeze start time, expected cutover time, and who to contact if something goes wrong.**"
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a final recap.",
+    "assistant_text": "## Final Recap\n\n| # | Phase | Key Action |\n|---|-------|------------|\n| 1 | **Prep** | Map all SVN authors, back up repo, freeze commits |\n| 2 | **Clone** | Run `git svn clone` with authors file |\n| 3 | **Clean Up** | Convert branches, tags, and add `.gitignore` |\n| 4 | **Verify** | Compare commit counts, check branches and tags |\n| 5 | **Push** | Push all branches and tags to remote |\n| 6 | **Onboard** | Team clones Git repo, CI/CD updated |\n| 7 | **Sign Off** | Team lead approves, SVN set to read-only |\n\n> **One rule:** Don't retire the SVN backup until the Git repo is fully verified, the team is onboarded, and the team lead has signed off. Everything else is recoverable \u2014 discarding the backup too early is not."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in short bullets only.",
+    "assistant_text": "- Map authors before cloning\n- Freeze SVN at migration start\n- Clone with `git svn`\n- Convert branches and tags\n- Compare commit counts\n- Push all branches and tags\n- Update CI/CD pipelines\n- Team lead approves cutover\n- Set SVN to read-only\n- Keep backup until fully verified"
+  }
+]

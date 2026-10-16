@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Compare REST and GraphQL for a small internal API.",
+    "assistant_text": "## REST vs GraphQL for a Small Internal API\n\n**Verdict up front: REST is usually the better choice.**\n\n---\n\n### Why REST wins for small internal APIs\n\n| Factor | REST | GraphQL |\n|---|---|---|\n| **Setup complexity** | Low | Medium\u2013High |\n| **Tooling/familiarity** | Universal | Requires learning curve |\n| **Debugging** | Simple (curl, browser) | Needs GraphiQL/Playground |\n| **Overhead** | Minimal | Schema, resolvers, type system |\n| **Caching** | HTTP cache works natively | Requires extra work |\n\n---\n\n### When GraphQL makes sense *even* for small APIs\n\n- **Multiple clients** with different data needs (mobile vs. web)\n- **Rapidly evolving schema** \u2014 avoids versioning pain\n- **Deeply nested/relational data** \u2014 avoids N+1 round trips\n- **Frontend team drives API shape** \u2014 self-documenting schema helps\n\n---\n\n### When to stick with REST\n\n- Single client or tight team\n- Simple CRUD operations\n- You want fast delivery with zero ceremony\n- Standard HTTP caching matters\n\n---\n\n### Practical rule\n\n> Start with REST. Migrate to GraphQL only when over-fetching, under-fetching, or multi-client complexity becomes a real pain point \u2014 not a hypothetical one."
+  },
+  {
+    "turn_index": 1,
+    "user_text": "Give the main difference in one sentence.",
+    "assistant_text": "REST exposes fixed endpoints that return predefined data shapes; GraphQL exposes a single endpoint where clients specify exactly what data they need."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Which is simpler to cache and why?",
+    "assistant_text": "REST \u2014 HTTP caching works out of the box because each resource has a unique URL, while GraphQL uses a single POST endpoint, making standard HTTP cache layers blind to query differences."
+  },
+  {
+    "turn_index": 3,
+    "user_text": "Name one downside of GraphQL for a small team.",
+    "assistant_text": "Schema design and resolver maintenance add overhead that rarely pays off when a small team could just add a field to a REST endpoint in minutes."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "Name one downside of REST for changing requirements.",
+    "assistant_text": "Every schema change risks requiring a new versioned endpoint (e.g., `/v2/users`), whereas GraphQL clients can simply request new fields without breaking existing queries."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "Which is easier to secure by default?",
+    "assistant_text": "REST \u2014 each endpoint can have discrete auth/rate-limit rules applied at the network layer, while GraphQL's single endpoint requires custom query-depth and complexity analysis to prevent abuse."
+  },
+  {
+    "turn_index": 6,
+    "user_text": "Give a short recommendation for a 2-person team.",
+    "assistant_text": "Use REST \u2014 ship faster, debug easier, and add GraphQL only if client data-fetching pain becomes undeniable."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide one thing they have in common.",
+    "assistant_text": "Both are API paradigms that can use JSON over HTTP and require authentication, versioning strategy, and error handling regardless of which you choose."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "State which has clearer tooling out of the box.",
+    "assistant_text": "REST \u2014 standard HTTP tools (curl, Postman, browser devtools) work immediately with no setup."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give a one-line summary.",
+    "assistant_text": "For a small internal API, REST wins on simplicity; GraphQL wins on flexibility \u2014 pick REST unless you have a concrete reason not to."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Answer in two bullets.",
+    "assistant_text": "- **REST**: simpler, faster to build, easier to cache and debug.\n- **GraphQL**: more flexible for complex data needs, but overkill for most small teams."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Provide a final short recap.",
+    "assistant_text": "REST is the default smart choice for small internal APIs; reach for GraphQL only when clients genuinely need flexible, complex data fetching."
+  }
+]

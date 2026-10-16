@@ -1,0 +1,62 @@
+[
+  {
+    "turn_index": 0,
+    "user_text": "Explain what a hash table is and when to use it.",
+    "assistant_text": "## Hash Table\n\nA data structure that maps **keys to values** using a hash function to compute an index into an array of buckets.\n\n**How it works:**\n1. Hash function converts a key \u2192 array index\n2. Value is stored at that index\n3. Collisions (two keys \u2192 same index) are handled via chaining or open addressing\n\n**Performance:**\n| Operation | Average | Worst |\n|-----------|---------|-------|\n| Lookup | O(1) | O(n) |\n| Insert | O(1) | O(n) |\n| Delete | O(1) | O(n) |\n\nWorst case occurs with many collisions (poor hash function or adversarial input).\n\n---\n\n## When to Use It\n\n**\u2705 Good fit:**\n- Fast key-based lookup (caches, indexes, deduplication)\n- Counting/frequency tracking\n- Implementing sets\n- Memoization\n\n**\u274c Avoid when:**\n- You need **sorted data** \u2192 use a BST/sorted array\n- You need **ordered iteration** \u2192 use a linked list or array\n- Keys have **poor hash distribution**\n- Memory is very constrained (hash tables have overhead)\n\n---\n\n**Common examples:** Python `dict`, Java `HashMap`, JavaScript `Object`/`Map`."
+  },
+  {
+    "turn_index": 1,
+    "user_text": "Summarize the key benefit in one sentence.",
+    "assistant_text": "Hash tables provide **O(1) average-case lookup, insertion, and deletion** by key."
+  },
+  {
+    "turn_index": 2,
+    "user_text": "Give one practical example in everyday apps.",
+    "assistant_text": "A browser uses a hash table to store cached web pages, instantly retrieving them by URL instead of scanning every cached item."
+  },
+  {
+    "turn_index": 3,
+    "user_text": "Name one tradeoff compared to a balanced tree.",
+    "assistant_text": "Hash tables are faster on average but don't maintain order, so unlike a balanced tree, you can't efficiently find the minimum, maximum, or range of keys."
+  },
+  {
+    "turn_index": 4,
+    "user_text": "List two common pitfalls.",
+    "assistant_text": "1. **Poor hash functions** cause clustering/collisions, degrading performance to O(n).\n2. **Resizing overhead** \u2014 when the table exceeds its load factor, rehashing all keys is expensive and can cause latency spikes."
+  },
+  {
+    "turn_index": 5,
+    "user_text": "State the average time complexity for lookup.",
+    "assistant_text": "O(1)"
+  },
+  {
+    "turn_index": 6,
+    "user_text": "What is a good alternative when memory is tight?",
+    "assistant_text": "A **sorted array with binary search** \u2014 O(log n) lookup but minimal memory overhead with no hash/pointer storage."
+  },
+  {
+    "turn_index": 7,
+    "user_text": "Provide one short analogy.",
+    "assistant_text": "A hash table is like a filing cabinet where the label on each folder tells you exactly which drawer to open \u2014 no searching required."
+  },
+  {
+    "turn_index": 8,
+    "user_text": "Describe when I should not use it.",
+    "assistant_text": "Avoid hash tables when you need sorted data, range queries, or ordered iteration \u2014 or when memory is severely constrained."
+  },
+  {
+    "turn_index": 9,
+    "user_text": "Give one reason it can be faster than a list.",
+    "assistant_text": "A list requires scanning elements one by one (O(n)), while a hash table jumps directly to the value's location (O(1))."
+  },
+  {
+    "turn_index": 10,
+    "user_text": "Provide a one-line recap.",
+    "assistant_text": "Hash tables offer instant key-based lookups by trading memory and ordering for speed."
+  },
+  {
+    "turn_index": 11,
+    "user_text": "Answer in a short bullet list.",
+    "assistant_text": "- Maps keys to values via a hash function\n- O(1) average lookup, insert, delete\n- Best for fast key-based access, caching, counting\n- Avoid when ordering or memory efficiency matters"
+  }
+]

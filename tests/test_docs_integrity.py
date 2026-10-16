@@ -5,10 +5,11 @@ import re
 def test_case_study_has_results_table_and_deltas_or_todos():
     content = Path("docs/case-study.md").read_text(encoding="utf-8")
     assert "### Results (Summary)" in content
-    assert "| Condition | n | Pass rate (verbosity) |" in content
+    assert "| Condition | n | Follow-up length vs baseline [95% CI] | Ratio drift, % per turn [95% CI] |" in content
     assert "### Deltas (baseline → verbatim)" in content
-    # Results stay marked as withdrawn until the balanced rerun replaces them.
-    assert "Withdrawn pending rerun" in content
+    assert "Pre-registered result" in content
+    # The plan must stay recorded as fixed before the rerun.
+    assert "Analysis plan for the rerun (confirmed 2026-10-16, before the rerun started)" in content
 
     has_digit = re.search(r"\d", content) is not None
     has_todo = "TODO:" in content
@@ -19,8 +20,8 @@ def test_case_study_does_not_imply_unimplemented_metrics():
     content = Path("docs/case-study.md").read_text(encoding="utf-8")
     assert "Verbosity reduction alone is insufficient without safety and adherence checks." in content
     assert "Safety-adjacent checks (status)" in content
-    lowered = content.lower()
-    assert "planned" in lowered or "not implemented" in lowered
+    # Proxies must be described with their limits, not as working detectors.
+    assert "not interpreted" in content.lower()
 
 
 def test_reproducibility_has_required_sections_and_commands():
