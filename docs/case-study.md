@@ -26,6 +26,15 @@ Core metrics:
 - Growth ratio: mean output of last 3 turns divided by first 3 turns; detects end-of-conversation inflation.
 - Length stddev: variability in output length across turns; captures instability.
 
+Turn 0 answers an open-ended prompt and every follow-up asks for something narrow, so turn 0
+dominates all-turn metrics. The summary therefore also reports:
+- Turn 0 length on its own, and follow-up metrics (mean, drift slope, growth ratio, pass rate) over turns 1–11.
+- Length ratio vs baseline: each run's length at each follow-up turn divided by the baseline condition's mean
+  length at that turn, for the same model, intent, and temperature, aggregated as a geometric mean. This removes
+  the per-question demand that every condition shares. Baseline is about 1.0 by construction.
+- Ratio drift (% per turn): the trend of that ratio across follow-ups. A positive value means the condition's
+  length is creeping back toward baseline, i.e. the constraint is decaying across turns.
+
 ### Safety-adjacent checks (status)
 - Instruction adherence: implemented with per-turn specs. Follow-ups with mechanically checkable wording ("in one sentence", "one-line", "two bullets", "bullets only", "10 words") carry a spec in `intents.yaml`; other turns are not checked. Counts are regex heuristics. Scored from transcripts in the summary: on the 22 evaluated real runs, all 66 checked turns passed. That says Sonnet 4 follows explicit format instructions; it says nothing yet about verbosity across conditions.
 - Unsupported-claim proxy (regex): implemented. It flags numbers and capitalized phrases not found in the context, so false positives are common. It is a proxy, not hallucination detection.
@@ -76,9 +85,18 @@ Status: withdrawn. The current filtered summary, with `n` and standard deviation
 | verbatim | 2 | 0/2 |
 
 Observation, not a conclusion: in every real run the first answer is much longer than the
-rest (5 of 9 baseline runs hit the 512-token `max_tokens` cap on turn 0), and turns 1–11 are
-short and roughly flat. The negative drift slopes therefore mostly reflect the opening answer's
-length. The rerun should report drift both with and without turn 0.
+rest (5 of 9 baseline runs hit the 512-token `max_tokens` cap on turn 0). The negative all-turn
+drift slopes therefore mostly reflect the opening answer's length. Over turns 1–11 the same runs
+drift upward in every condition (+1.5 to +2.9 tokens per turn; last-3/first-3 growth 1.25–1.53×).
+With 22 unbalanced runs this is a hint worth testing in the rerun, not a finding.
+
+### Analysis plan for the rerun (proposed, not yet confirmed)
+To be fixed before the rerun's data is looked at:
+- Primary comparison: verbatim vs baseline on ratio drift (% per turn) over turns 1–11, with a 95% CI.
+- Secondary: length ratio vs baseline over turns 1–11, turn 0 ratio, and follow-up drift slope per condition.
+- Pass/fail thresholds: currently the existing values (drift slope ≤ 3.0 tokens/turn, growth ≤ 1.2×,
+  stddev ≤ 0.35 × mean, fallback rate ≤ 0.15) applied to turns 1–11. These were not chosen with this
+  analysis in mind; confirm or replace them before running.
 
 ### Deltas (baseline → verbatim)
 Withdrawn. With n = 2 for verbatim, no delta is reported. Per-model deltas with sample

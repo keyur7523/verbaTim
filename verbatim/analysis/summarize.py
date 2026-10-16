@@ -15,12 +15,16 @@ from pathlib import Path
 from typing import Any
 
 from verbatim.analysis.contamination import run_dir_mock_reasons
+from verbatim.analysis.turn_analysis import baseline_profiles, followup_checks, followup_metrics, ratio_vs_baseline
 from verbatim.evaluators.instruction_adherence import evaluate_transcript_adherence
-from verbatim.experiments.run_conversations import build_turn_specs, load_intents
+from verbatim.experiments.run_conversations import DEFAULT_THRESHOLDS, build_turn_specs, load_intents
 
 
 MOCK_MODELS = {None, "", "mock-echo"}
 METRIC_KEYS = ("mean_tokens_per_turn", "drift_slope", "length_stddev", "growth_ratio")
+FOLLOWUP_KEYS = ("turn0_tokens", "followup_mean_tokens", "followup_drift_slope", "followup_growth_ratio")
+# Baseline comparisons only match runs that saw the same questions under the same settings.
+BASELINE_KEY_FIELDS = ("model", "length_unit", "intent_id", "temperature")
 
 
 def _load_json(path: Path) -> Any:
@@ -40,6 +44,22 @@ def _length_unit(payload: dict[str, Any]) -> str:
         return payload["length_unit"]
     is_mock = _model_id(payload) in MOCK_MODELS or payload.get("backend") == "mock"
     return "words" if is_mock else "provider_tokens"
+
+
+def _temperature(payload: dict[str, Any]) -> float | None:
+    if "temperature" in payload:
+        return payload["temperature"]
+    return (payload.get("parameters") or {}).get("temperature")
+
+
+def _ordered_outputs(turn_metrics: list[dict[str, Any]]) -> list[float]:
+    ordered = sorted(turn_metrics, key=lambda item: item.get("turn_index", 0))
+    return [float(t["output_tokens"]) for t in ordered if isinstance(t.get("output_tokens"), (int, float))]
+
+
+def _geometric_mean(values: list[float]) -> float | None:
+    positive = [v for v in values if v and v > 0]
+    return math.exp(sum(math.log(v) for v in positive) / len(positive)) if positive else None
 
 
 def _extract_metrics(payload: dict[str, Any]) -> dict[str, float | None]:
@@ -131,6 +151,7 @@ def _instruction_adherence(run_dir: Path, intent: dict[str, Any] | None) -> dict
 def summarize(artifacts_dir: Path, include_mock: bool = False) -> tuple[list[dict[str, Any]], Counter]:
     rows: dict[tuple[str, str, str], dict[str, Any]] = {}
     excluded: Counter = Counter()
+    records: list[dict[str, Any]] = []
     intents = {intent.get("id"): intent for intent in load_intents().get("intents", [])}
 
     for run_dir in sorted(artifacts_dir.iterdir()):
@@ -161,6 +182,12 @@ def summarize(artifacts_dir: Path, include_mock: bool = False) -> tuple[list[dic
                 "n": 0,
                 "passed": 0,
                 **{key: [] for key in METRIC_KEYS},
+                **{key: [] for key in FOLLOWUP_KEYS},
+                "followup_checked": 0,
+                "followup_passed": 0,
+                "length_ratio_vs_baseline": [],
+                "ratio_drift_pct_per_turn": [],
+                "turn0_ratio_vs_baseline": [],
                 "instruction_checked_turns": 0,
                 "instruction_passed_turns": 0,
                 "unsupported_claim_flagged": 0,
@@ -183,6 +210,25 @@ def summarize(artifacts_dir: Path, include_mock: bool = False) -> tuple[list[dic
         if turn_metrics_path.exists():
             turn_metrics = load_turn_metrics(turn_metrics_path)
             row["growth_ratio"].append(compute_growth_ratio_from_turn_metrics(turn_metrics, n=3))
+            outputs = _ordered_outputs(turn_metrics)
+            followup = followup_metrics(outputs)
+            for key in FOLLOWUP_KEYS:
+                if isinstance(followup.get(key), (int, float)):
+                    row[key].append(float(followup[key]))
+            if "followup_drift_slope" in followup:
+                fallback_rate = (payload.get("metrics") or {}).get("fallback_rate") or 0.0
+                row["followup_checked"] += 1
+                if all(followup_checks(followup, fallback_rate, DEFAULT_THRESHOLDS).values()):
+                    row["followup_passed"] += 1
+            records.append({
+                "row_key": (model, condition, length_unit),
+                "model": model,
+                "condition": condition,
+                "length_unit": length_unit,
+                "intent_id": payload.get("intent_id"),
+                "temperature": _temperature(payload),
+                "outputs": outputs,
+            })
 
         adherence = _instruction_adherence(run_dir, intents.get(payload.get("intent_id")))
         if adherence:
@@ -202,6 +248,17 @@ def summarize(artifacts_dir: Path, include_mock: bool = False) -> tuple[list[dic
                 if not passed:
                     row["refusal_keyword_flagged"] += 1
 
+    profiles = baseline_profiles(records, BASELINE_KEY_FIELDS)
+    for record in records:
+        profile = profiles.get(tuple(record[f] for f in BASELINE_KEY_FIELDS))
+        if not profile:
+            continue
+        ratios = ratio_vs_baseline(record["outputs"], profile)
+        row = rows[record["row_key"]]
+        for key in ("length_ratio_vs_baseline", "ratio_drift_pct_per_turn", "turn0_ratio_vs_baseline"):
+            if ratios[key] is not None:
+                row[key].append(ratios[key])
+
     output = []
     for row in rows.values():
         out: dict[str, Any] = {
@@ -216,6 +273,19 @@ def summarize(artifacts_dir: Path, include_mock: bool = False) -> tuple[list[dic
             mean, sd = _mean_sd(row[key])
             out[key] = mean
             out[f"{key}_sd"] = sd
+        for key in FOLLOWUP_KEYS:
+            mean, sd = _mean_sd(row[key])
+            out[key] = mean
+            out[f"{key}_sd"] = sd
+        out["followup_passed"] = row["followup_passed"]
+        out["followup_pass_rate"] = (
+            row["followup_passed"] / row["followup_checked"] if row["followup_checked"] else None
+        )
+        # Ratios are aggregated geometrically; n_compared is how many runs had a matching baseline.
+        out["n_compared"] = len(row["length_ratio_vs_baseline"])
+        out["length_ratio_vs_baseline"] = _geometric_mean(row["length_ratio_vs_baseline"])
+        out["turn0_ratio_vs_baseline"] = _geometric_mean(row["turn0_ratio_vs_baseline"])
+        out["ratio_drift_pct_per_turn"], out["ratio_drift_pct_per_turn_sd"] = _mean_sd(row["ratio_drift_pct_per_turn"])
         out["instruction_checked_turns"] = row["instruction_checked_turns"]
         out["instruction_turn_pass_rate"] = (
             row["instruction_passed_turns"] / row["instruction_checked_turns"]
@@ -250,6 +320,21 @@ CSV_HEADER = [
     "length_stddev_sd",
     "growth_ratio",
     "growth_ratio_sd",
+    "turn0_tokens",
+    "turn0_tokens_sd",
+    "followup_mean_tokens",
+    "followup_mean_tokens_sd",
+    "followup_drift_slope",
+    "followup_drift_slope_sd",
+    "followup_growth_ratio",
+    "followup_growth_ratio_sd",
+    "followup_passed",
+    "followup_pass_rate",
+    "n_compared",
+    "length_ratio_vs_baseline",
+    "turn0_ratio_vs_baseline",
+    "ratio_drift_pct_per_turn",
+    "ratio_drift_pct_per_turn_sd",
     "instruction_checked_turns",
     "instruction_turn_pass_rate",
     "unsupported_claim_proxy_rate",
@@ -273,6 +358,14 @@ def _row_cells(row: dict[str, Any]) -> list[str]:
         _format_float(row["length_stddev_sd"]),
         _format_float(row["growth_ratio"]),
         _format_float(row["growth_ratio_sd"]),
+        *(_format_float(row[f"{key}{suffix}"]) for key in FOLLOWUP_KEYS for suffix in ("", "_sd")),
+        str(row["followup_passed"]),
+        _format_float(row["followup_pass_rate"]),
+        str(row["n_compared"]),
+        _format_float(row["length_ratio_vs_baseline"]),
+        _format_float(row["turn0_ratio_vs_baseline"]),
+        _format_float(row["ratio_drift_pct_per_turn"]),
+        _format_float(row["ratio_drift_pct_per_turn_sd"]),
         str(row["instruction_checked_turns"]),
         _format_float(row["instruction_turn_pass_rate"]),
         _format_float(row["unsupported_claim_proxy_rate"]),

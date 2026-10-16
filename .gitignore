@@ -10,6 +10,8 @@ __pycache__/
 # Artifacts: only real-model runs under artifacts/ are committed.
 # Mock-backend and failed runs are kept locally, out of git.
 artifacts_excluded/
+# Pilot runs, kept out of the committed results.
+artifacts_pilot/
 
 # Local databases and logs
 *.db

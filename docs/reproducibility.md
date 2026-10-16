@@ -79,7 +79,7 @@ python verbatim/analysis/summarize.py \
 - `turn_metrics.json`: per-turn token and latency metadata
 - `evaluator_results.json`: evaluator outputs per run
 - `aggregate_metrics.json`: rollup metrics for the run, plus run metadata (`artifact_schema_version` 2 and later): `run_id`, `model`, `backend` (`anthropic`, `probekit-api`, or `mock`), `length_unit` (`provider_tokens`, `provider_tokens_incl_thinking`, or `words`), `intent_id`, `condition`, `temperature`, `token_budget`, `max_tokens`, `timestamp`, `status`, `error`
-- `summary.csv`: aggregation per (model, condition, length unit) with `n` and standard deviations; word counts and token counts are never pooled; failed, mock (model null or `mock-echo`), and unevaluated runs are excluded (pass `--include-mock` to keep mock runs)
+- `summary.csv`: aggregation per (model, condition, length unit) with `n` and standard deviations, including turn 0 length, follow-up (turns 1–11) metrics and pass rate, and turn-by-turn length ratio vs baseline (matched on model, intent, and temperature; `n_compared` counts matched runs); word counts and token counts are never pooled; failed, mock (model null or `mock-echo`), and unevaluated runs are excluded (pass `--include-mock` to keep mock runs)
 - `summary.html`: HTML table view
 
 Interpretation notes:
