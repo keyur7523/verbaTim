@@ -67,8 +67,15 @@ def load_prompt_template(condition: str, token_budget: int | None = None) -> str
 
 def build_turns(intent: dict[str, Any]) -> list[str]:
     turns = [intent["initial_user_prompt"]]
-    turns.extend(intent.get("followups", []))
+    turns.extend(f if isinstance(f, str) else f["text"] for f in intent.get("followups", []))
     return turns
+
+
+def build_turn_specs(intent: dict[str, Any]) -> list[dict[str, Any] | None]:
+    """Instruction-adherence spec per turn, aligned with build_turns (None = no check)."""
+    specs: list[dict[str, Any] | None] = [None]
+    specs.extend(None if isinstance(f, str) else f.get("spec") for f in intent.get("followups", []))
+    return specs
 
 
 def _http_json(

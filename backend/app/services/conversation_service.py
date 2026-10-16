@@ -13,6 +13,7 @@ from verbatim.evaluators.hallucination_proxy import evaluate_hallucination_proxy
 from verbatim.evaluators.refusal import evaluate_refusal
 from verbatim.experiments.run_conversations import (
     DEFAULT_THRESHOLDS,
+    build_turn_specs,
     build_turns,
     load_intents,
     load_prompt_template,
@@ -125,7 +126,8 @@ def run_conversation(
     instruction_results = []
     hallucination_results = []
     refusal_results = []
-    instruction_spec = intent.get("instruction_spec") if isinstance(intent, dict) else None
+    # Per-turn specs only apply when the turns come from the intent itself.
+    turn_specs = build_turn_specs(intent) if intent and turns_override is None else []
     context = intent.get("context") if isinstance(intent, dict) else None
 
     for index, user_text in enumerate(turns):
@@ -153,7 +155,9 @@ def run_conversation(
         total_cost += cost_usd
         total_latency += latency_ms
 
-        instruction_results.append(evaluate_instruction_adherence(assistant_text, instruction_spec))
+        turn_spec = turn_specs[index] if index < len(turn_specs) else None
+        if turn_spec:
+            instruction_results.append(evaluate_instruction_adherence(assistant_text, turn_spec))
         hallucination_results.append(evaluate_hallucination_proxy(assistant_text, context))
         refusal_results.append(evaluate_refusal(assistant_text))
 
@@ -190,16 +194,24 @@ def run_conversation(
     )
     db.add(eval_result)
 
-    instruction_pass = all(result["passed"] for result in instruction_results) if instruction_results else True
+    # None (not checked) when no turn had a spec, so an unchecked run never counts as a pass.
+    instruction_passed_turns = sum(1 for result in instruction_results if result["passed"])
+    instruction_pass = (instruction_passed_turns == len(instruction_results)) if instruction_results else None
     db.add(ConversationEvaluatorResult(
         run_id=run.id,
         evaluator_name="instruction_adherence",
         passed=instruction_pass,
-        score=1.0 if instruction_pass else 0.0,
+        score=(instruction_passed_turns / len(instruction_results)) if instruction_results else None,
         details={
+            "checked_turns": len(instruction_results),
+            "passed_turns": instruction_passed_turns,
             "per_turn": [result["details"] for result in instruction_results],
         },
-        reasoning="All turns passed instruction adherence" if instruction_pass else "Instruction adherence failures",
+        reasoning=(
+            "No turn has an instruction spec" if instruction_pass is None
+            else "All checked turns passed instruction adherence" if instruction_pass
+            else "Instruction adherence failures"
+        ),
     ))
 
     hallucination_pass = all(result["passed"] for result in hallucination_results) if hallucination_results else True

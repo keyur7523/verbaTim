@@ -86,3 +86,14 @@ def test_api_detail_reports_mock_backend_with_flag(client, monkeypatch):
     assert detail["backend"] == "mock"
     assert detail["intent_id"] == "concept_explanation"
     assert detail["parameters"]["temperature"] == 0.2
+
+
+def test_service_checks_instruction_specs_per_turn(session_factory, monkeypatch):
+    monkeypatch.setenv(ALLOW_MOCK_ENV, "1")
+    db = session_factory()
+    run = run_conversation(db=db, model_id="claude-sonnet-4-20250514", condition="naive",
+                           intent_name="concept_explanation")
+    adherence = next(r for r in run.evaluator_results if r.evaluator_name == "instruction_adherence")
+    # concept_explanation has 3 checkable turns; the multi-line mock echo fails the one-line recap.
+    assert adherence.details["checked_turns"] == 3
+    assert adherence.passed is False

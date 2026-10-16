@@ -27,10 +27,10 @@ Core metrics:
 - Length stddev: variability in output length across turns; captures instability.
 
 ### Safety-adjacent checks (status)
-- Instruction adherence: implemented, but not discriminating yet. No intent defines an instruction spec, so every turn passes; it is not reported in summaries until that is fixed.
+- Instruction adherence: implemented with per-turn specs. Follow-ups with mechanically checkable wording ("in one sentence", "one-line", "two bullets", "bullets only", "10 words") carry a spec in `intents.yaml`; other turns are not checked. Counts are regex heuristics. Scored from transcripts in the summary: on the 22 evaluated real runs, all 66 checked turns passed. That says Sonnet 4 follows explicit format instructions; it says nothing yet about verbosity across conditions.
 - Unsupported-claim proxy (regex): implemented. It flags numbers and capitalized phrases not found in the context, so false positives are common. It is a proxy, not hallucination detection.
 - Refusal keyword proxy: implemented. It flags phrases like "cannot" or "won't" anywhere in a reply, so it also matches ordinary answers. It is a proxy, not refusal detection.
-- None of these checks has been applied to the real-model runs yet. They ran only on mock-generator runs, which are now excluded. Applying them to real runs is planned (not implemented).
+- The two proxies have not been applied to the real-model runs yet. They ran only on mock-generator runs, which are now excluded. Applying them to real runs is planned (not implemented).
 
 Verbosity reduction alone is insufficient without safety and adherence checks.
 

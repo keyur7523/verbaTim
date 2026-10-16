@@ -79,7 +79,7 @@ I evaluate verbosity stability quantitatively rather than qualitatively.
 
 Verbosity reduction alone is insufficient without safety and adherence checks.
 
-Safety-adjacent evaluators are regex/keyword proxies, not detectors: an instruction-adherence check, an unsupported-claim proxy (regex), and a refusal keyword proxy. None of them has been applied to the real-model runs yet, and instruction adherence passes unconditionally until intents define an instruction spec. See the case study for status.
+Safety-adjacent evaluators are regex/keyword proxies, not detectors: an instruction-adherence check, an unsupported-claim proxy (regex), and a refusal keyword proxy. Instruction adherence uses per-turn specs for follow-ups with checkable wording ("one sentence", "two bullets", …) and is scored from transcripts; the two proxies have not been applied to the real-model runs yet. See the case study for status.
 
 ---
 

@@ -15,6 +15,8 @@ from pathlib import Path
 from typing import Any
 
 from verbatim.analysis.contamination import run_dir_mock_reasons
+from verbatim.evaluators.instruction_adherence import evaluate_transcript_adherence
+from verbatim.experiments.run_conversations import build_turn_specs, load_intents
 
 
 MOCK_MODELS = {None, "", "mock-echo"}
@@ -109,9 +111,19 @@ def _mean_sd(values: list[float]) -> tuple[float | None, float | None]:
     return mean, math.sqrt(variance)
 
 
+def _instruction_adherence(run_dir: Path, intent: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Score instruction adherence from the transcript, using the intent's per-turn specs."""
+    path = run_dir / "transcript.json"
+    if intent is None or not path.exists():
+        return None
+    transcript = _load_json(path)
+    return evaluate_transcript_adherence(transcript if isinstance(transcript, list) else [], build_turn_specs(intent))
+
+
 def summarize(artifacts_dir: Path, include_mock: bool = False) -> tuple[list[dict[str, Any]], Counter]:
     rows: dict[tuple[str, str], dict[str, Any]] = {}
     excluded: Counter = Counter()
+    intents = {intent.get("id"): intent for intent in load_intents().get("intents", [])}
 
     for run_dir in sorted(artifacts_dir.iterdir()):
         if not run_dir.is_dir():
@@ -138,6 +150,8 @@ def summarize(artifacts_dir: Path, include_mock: bool = False) -> tuple[list[dic
                 "n": 0,
                 "passed": 0,
                 **{key: [] for key in METRIC_KEYS},
+                "instruction_checked_turns": 0,
+                "instruction_passed_turns": 0,
                 "unsupported_claim_flagged": 0,
                 "unsupported_claim_total": 0,
                 "refusal_keyword_flagged": 0,
@@ -159,8 +173,11 @@ def summarize(artifacts_dir: Path, include_mock: bool = False) -> tuple[list[dic
             turn_metrics = load_turn_metrics(turn_metrics_path)
             row["growth_ratio"].append(compute_growth_ratio_from_turn_metrics(turn_metrics, n=3))
 
-        # instruction_adherence is not reported: no intent defines an
-        # instruction_spec yet, so it passes unconditionally (audit V12).
+        adherence = _instruction_adherence(run_dir, intents.get(payload.get("intent_id")))
+        if adherence:
+            row["instruction_checked_turns"] += adherence["checked_turns"]
+            row["instruction_passed_turns"] += adherence["passed_turns"]
+
         for result in _load_evaluator_results(run_dir):
             name = result.get("evaluator_name")
             passed = result.get("passed")
@@ -186,6 +203,11 @@ def summarize(artifacts_dir: Path, include_mock: bool = False) -> tuple[list[dic
             mean, sd = _mean_sd(row[key])
             out[key] = mean
             out[f"{key}_sd"] = sd
+        out["instruction_checked_turns"] = row["instruction_checked_turns"]
+        out["instruction_turn_pass_rate"] = (
+            row["instruction_passed_turns"] / row["instruction_checked_turns"]
+            if row["instruction_checked_turns"] else None
+        )
         out["unsupported_claim_proxy_rate"] = (
             row["unsupported_claim_flagged"] / row["unsupported_claim_total"]
             if row["unsupported_claim_total"] else None
@@ -214,6 +236,8 @@ CSV_HEADER = [
     "length_stddev_sd",
     "growth_ratio",
     "growth_ratio_sd",
+    "instruction_checked_turns",
+    "instruction_turn_pass_rate",
     "unsupported_claim_proxy_rate",
     "refusal_keyword_proxy_rate",
 ]
@@ -234,6 +258,8 @@ def _row_cells(row: dict[str, Any]) -> list[str]:
         _format_float(row["length_stddev_sd"]),
         _format_float(row["growth_ratio"]),
         _format_float(row["growth_ratio_sd"]),
+        str(row["instruction_checked_turns"]),
+        _format_float(row["instruction_turn_pass_rate"]),
         _format_float(row["unsupported_claim_proxy_rate"]),
         _format_float(row["refusal_keyword_proxy_rate"]),
     ]
