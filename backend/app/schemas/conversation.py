@@ -45,6 +45,10 @@ class ConversationDetailResponse(BaseModel):
     run_id: str
     condition: str
     model_id: str
+    backend: str | None = None
+    intent_id: str | None = None
+    parameters: dict | None = None
+    error: str | None = None
     status: str
     metrics: dict
     turns: list[ConversationTurnResponse]

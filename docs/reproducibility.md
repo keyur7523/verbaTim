@@ -71,7 +71,7 @@ python verbatim/analysis/summarize.py \
 - `transcript.json`: ordered user/assistant turns
 - `turn_metrics.json`: per-turn token and latency metadata
 - `evaluator_results.json`: evaluator outputs per run
-- `aggregate_metrics.json`: rollup metrics for the run
+- `aggregate_metrics.json`: rollup metrics for the run, plus run metadata (`artifact_schema_version` 2 and later): `run_id`, `model`, `backend` (`probekit-api` or `mock`), `intent_id`, `condition`, `temperature`, `token_budget`, `max_tokens`, `timestamp`, `status`, `error`
 - `summary.csv`: aggregation per (model, condition) with `n` and standard deviations; failed, mock (model null or `mock-echo`), and unevaluated runs are excluded (pass `--include-mock` to keep mock runs)
 - `summary.html`: HTML table view
 
@@ -91,4 +91,4 @@ characterize variance; for tighter estimates, run N replicates per condition and
 - Sample size is limited to the runs executed locally.
 - Model versions can change over time.
 - API and inference behavior are non-deterministic.
-- The local backend in `backend/` never calls a model: it echoes the system prompt plus the user text and counts words, not tokens. Runs it produces have `model: null` and are excluded from summaries. Real runs must go through an API that calls the model and reports provider token counts.
+- The local backend in `backend/` never calls a model: it echoes the system prompt plus the user text and counts words, not tokens. Runs it produces have `model: null` and are excluded from summaries. Real runs must go through an API that calls the model and reports provider token counts. The backend refuses runs unless `VERBATIM_ALLOW_MOCK=1` is set, and the runner refuses to save mock runs unless `--allow-mock` is passed.
