@@ -7,13 +7,14 @@
   - `pip install -r requirements.txt`
   - `pip install -r backend/requirements.txt` (if running the backend)
 - Required environment variables (name only):
-  - ANTHROPIC_API_KEY (required only if backend is wired to real model calls)
+  - ANTHROPIC_API_KEY (required for real-model runs through the local backend; an `ant auth login` profile also works)
 
 ## 2) Model Configuration
 - Model name(s): set via `--model-id` in the runner (example: `claude-sonnet-4-20250514`)
 - Temperatures used: `0.2`, `0.5`
 - Token budgets used: `80`, `120`, `160` (budgeted condition only)
-- Fixed parameters: `max_tokens=512` in the runner
+- Fixed parameters: `max_tokens` defaults to 4096 in the runner. The committed runs used 512, which truncated several opening answers; truncated turns are now listed in `truncated_turns`.
+- Models in `verbatim/models.py` that reject `temperature` (Opus 4.7+, Sonnet 5+, Haiku 5.5) must be run with `--temperatures none`.
 - Not tuned: temperature, budget, and prompt wording were not optimized per intent
 
 ## 3) Dataset Description
@@ -23,6 +24,12 @@
 - Excluded: safety/refusal-specific prompts
 
 ## 4) Execution Steps (copy/paste commands)
+Start the backend (calls the Anthropic API):
+```bash
+export ANTHROPIC_API_KEY=...
+uvicorn app.main:app --app-dir backend --port 8000
+```
+
 Run all conditions locally against the backend:
 ```bash
 python verbatim/experiments/run_conversations.py \
@@ -71,7 +78,7 @@ python verbatim/analysis/summarize.py \
 - `transcript.json`: ordered user/assistant turns
 - `turn_metrics.json`: per-turn token and latency metadata
 - `evaluator_results.json`: evaluator outputs per run
-- `aggregate_metrics.json`: rollup metrics for the run, plus run metadata (`artifact_schema_version` 2 and later): `run_id`, `model`, `backend` (`probekit-api` or `mock`), `length_unit` (`provider_tokens` or `words`), `intent_id`, `condition`, `temperature`, `token_budget`, `max_tokens`, `timestamp`, `status`, `error`
+- `aggregate_metrics.json`: rollup metrics for the run, plus run metadata (`artifact_schema_version` 2 and later): `run_id`, `model`, `backend` (`anthropic`, `probekit-api`, or `mock`), `length_unit` (`provider_tokens`, `provider_tokens_incl_thinking`, or `words`), `intent_id`, `condition`, `temperature`, `token_budget`, `max_tokens`, `timestamp`, `status`, `error`
 - `summary.csv`: aggregation per (model, condition, length unit) with `n` and standard deviations; word counts and token counts are never pooled; failed, mock (model null or `mock-echo`), and unevaluated runs are excluded (pass `--include-mock` to keep mock runs)
 - `summary.html`: HTML table view
 
@@ -91,4 +98,4 @@ characterize variance; for tighter estimates, run N replicates per condition and
 - Sample size is limited to the runs executed locally.
 - Model versions can change over time.
 - API and inference behavior are non-deterministic.
-- The local backend in `backend/` never calls a model: it echoes the system prompt plus the user text and counts words, not tokens. Runs it produces have `model: null` and are excluded from summaries. Real runs must go through an API that calls the model and reports provider token counts. The backend refuses runs unless `VERBATIM_ALLOW_MOCK=1` is set, and the runner refuses to save mock runs unless `--allow-mock` is passed. Because older mock runs were stored under real model IDs, the summary also excludes runs whose transcript looks like mock output (`mock_content`), and a test fails if any committed transcript does.
+- The local backend calls the Anthropic API for models in `verbatim/models.py`. Its `mock-echo` model echoes the system prompt plus the user text and counts words, not tokens; older mock runs had `model: null` and are excluded from summaries. The backend refuses mock runs unless `VERBATIM_ALLOW_MOCK=1` is set, and the runner refuses to save mock runs unless `--allow-mock` is passed. Because older mock runs were stored under real model IDs, the summary also excludes runs whose transcript looks like mock output (`mock_content`), and a test fails if any committed transcript does.

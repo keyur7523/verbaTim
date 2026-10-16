@@ -20,3 +20,8 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def get_session_factory():
+    """Session factory for work that outlives the request (background runs)."""
+    return SessionLocal

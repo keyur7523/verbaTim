@@ -2,9 +2,9 @@ import json
 import uuid
 
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 
-from app.database import get_db
+from app.database import get_db, get_session_factory
 from app.models import ConversationRun, ConversationTurn, ConversationEvaluatorResult, RunStatus
 from app.schemas.conversation import (
     ConversationRunRequest,
@@ -15,9 +15,28 @@ from app.schemas.conversation import (
     CompareResponse,
     EvaluatorResultResponse,
 )
-from app.services.conversation_service import MockNotAllowedError, run_conversation
+from app.services.conversation_service import (
+    MockNotAllowedError,
+    PreparedRun,
+    RunConfigError,
+    execute_run,
+    prepare_run,
+)
 
 router = APIRouter()
+
+
+def get_client_factory():
+    """Anthropic client factory; None means the default client. Tests override this."""
+    return None
+
+
+def _execute_in_background(session_factory, prepared: PreparedRun) -> None:
+    db = session_factory()
+    try:
+        execute_run(db, prepared)
+    finally:
+        db.close()
 
 
 def _resolve_condition(request: ConversationRunRequest) -> str:
@@ -44,7 +63,13 @@ def _coerce_details(details):
 
 
 @router.post("/conversations/run", response_model=ConversationRunResponse)
-def start_run(request: ConversationRunRequest, db: Session = Depends(get_db)):
+def start_run(
+    request: ConversationRunRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    session_factory=Depends(get_session_factory),
+    client_factory=Depends(get_client_factory),
+):
     condition = _resolve_condition(request)
     temperatures = request.temperatures or []
     budgets = request.budgets or []
@@ -56,7 +81,7 @@ def start_run(request: ConversationRunRequest, db: Session = Depends(get_db)):
     if not budgets and "token_budget" in parameters:
         budgets = [parameters.get("token_budget")]
     if not temperatures:
-        temperatures = [0.0]
+        temperatures = [None]
     if not budgets:
         budgets = [None]
 
@@ -81,7 +106,7 @@ def start_run(request: ConversationRunRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=422, detail="intent_name is required when turns are not provided")
 
     try:
-        run = run_conversation(
+        prepared = prepare_run(
             db=db,
             model_id=model_id,
             condition=condition,
@@ -93,11 +118,16 @@ def start_run(request: ConversationRunRequest, db: Session = Depends(get_db)):
             system_prompt_override=system_prompt_override,
             intent_id_override=request.intent_id or intent_name,
             max_tokens=max_tokens,
+            client_factory=client_factory,
         )
     except MockNotAllowedError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except RunConfigError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
-    return ConversationRunResponse(run_id=str(run.id), status=run.status.value)
+    # A real 12-turn run takes minutes; the runner polls GET /conversations/{run_id}.
+    background_tasks.add_task(_execute_in_background, session_factory, prepared)
+    return ConversationRunResponse(run_id=str(prepared.run_id), status="pending")
 
 
 @router.get("/conversations/metrics", response_model=list[MetricsResponse])

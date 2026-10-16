@@ -34,7 +34,7 @@ This repository is intentionally **evaluation-first**, not a hosted service.
 - Run artifacts and CSV/JSON summaries (real-model runs only; see Results)
 - Internal-style case study and reproducibility documentation
 
-I include **no UI and no running backend** in this version by design.
+`backend/` is a small local FastAPI service that runs the conversations. It calls the Anthropic Messages API for real models, and has an echo mock for development that is refused unless explicitly enabled. There is no UI.
 
 ---
 
@@ -114,7 +114,7 @@ A detailed analysis, including failure modes and tradeoffs, is documented in:
 
 ## Reproducibility
 
-I designed this project to be reproducible without a running service.
+Re-running the experiment needs the local backend and an Anthropic API key. The summaries can be regenerated from the committed artifacts without either.
 
 Exact environment assumptions, execution commands, artifact descriptions, and variance caveats are documented in:
 
@@ -162,7 +162,7 @@ verbatim/
 
 ## Notes on scope
 
-I keep this repository artifact-based without a backend or UI.
+I keep this repository artifact-based: there is a small local backend for running conversations, but no UI or hosted service.
 
 A Probekit-style API/dashboard integration is out of scope here to keep the focus on behavioral specification, measurement rigor, and reasoning about tradeoffs.
 

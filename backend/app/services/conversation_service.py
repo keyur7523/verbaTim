@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, Callable
 
 from sqlalchemy.orm import Session
 
 from app.models import ConversationRun, ConversationTurn, ConversationEvaluatorResult, RunStatus
+from app.services.generators import MOCK_BACKEND, MOCK_MODEL_ID, AnthropicGenerator, MockGenerator
 from verbatim.evaluators.verbosity import TurnMetrics, compute_verbosity_metrics
 from verbatim.evaluators.instruction_adherence import evaluate_instruction_adherence
 from verbatim.evaluators.refusal_keyword_proxy import evaluate_refusal_keyword_proxy
@@ -18,19 +20,22 @@ from verbatim.experiments.run_conversations import (
     load_intents,
     load_prompt_template,
 )
+from verbatim.models import MODEL_CATALOG
 
-# This backend never calls a model. Its only generator is a mock that echoes
-# the prompt, so every run it produces is stamped as mock and requires an
-# explicit opt-in.
-MOCK_BACKEND = "mock"
-MOCK_MODEL_ID = "mock-echo"
-# The mock has no tokenizer: its input_tokens/output_tokens fields hold word counts.
+# Runs on a model from verbatim.models.MODEL_CATALOG call the Anthropic API.
+# Runs on "mock-echo" use the echo mock, which requires an explicit opt-in and
+# is always stamped as mock.
 MOCK_LENGTH_UNIT = "words"
 ALLOW_MOCK_ENV = "VERBATIM_ALLOW_MOCK"
+DEFAULT_MAX_TOKENS = 4096
 
 
 class MockNotAllowedError(RuntimeError):
     pass
+
+
+class RunConfigError(ValueError):
+    """The request can't be run as asked (unknown model or intent, unsupported parameter)."""
 
 
 def mock_allowed() -> bool:
@@ -42,37 +47,56 @@ def _select_intent(intent_name: str) -> dict[str, Any]:
     for intent in intents:
         if intent.get("id") == intent_name:
             return intent
-    raise ValueError(f"Intent not found: {intent_name}")
+    raise RunConfigError(f"Intent not found: {intent_name}")
 
 
-def _mock_generate_response(
-    system_prompt: str,
-    user_text: str,
+def _default_client_factory():
+    import anthropic
+
+    return anthropic.Anthropic()
+
+
+def _make_generator(
+    model_id: str,
     condition: str,
-    token_budget: int | None,
-) -> tuple[str, bool]:
-    base = f"{system_prompt}\n{user_text}".strip()
-    words = base.split()
-    if token_budget is None:
-        return base, False
+    budget: int | None,
+    temperature: float | None,
+    max_tokens: int,
+    client_factory: Callable[[], Any] | None,
+):
+    if model_id == MOCK_MODEL_ID:
+        if not mock_allowed():
+            raise MockNotAllowedError(
+                f"Model '{MOCK_MODEL_ID}' is the echo mock (no model is called). "
+                f"Set {ALLOW_MOCK_ENV}=1 to run it anyway."
+            )
+        return MockGenerator(condition=condition, token_budget=budget)
 
-    if len(words) <= token_budget:
-        return base, False
-
-    if condition == "budgeted":
-        return "Clarify: which detail is most important?", True
-
-    truncated = " ".join(words[:token_budget])
-    return truncated, True
-
-
-def _word_count(text: str | None) -> int:
-    if not text:
-        return 0
-    return len(text.split())
+    info = MODEL_CATALOG.get(model_id)
+    if info is None:
+        known = ", ".join(sorted([*MODEL_CATALOG, MOCK_MODEL_ID]))
+        raise RunConfigError(f"Unknown model '{model_id}'. Known: {known}")
+    if temperature is not None and not info.accepts_temperature:
+        raise RunConfigError(
+            f"Model '{model_id}' rejects the temperature parameter. "
+            "Run it without a temperature, or pick a model that accepts one."
+        )
+    client = (client_factory or _default_client_factory)()
+    return AnthropicGenerator(client=client, model_id=model_id, max_tokens=max_tokens, temperature=temperature)
 
 
-def run_conversation(
+@dataclass
+class PreparedRun:
+    run_id: Any
+    generator: Any
+    condition: str
+    system_prompt: str
+    turns: list[str]
+    turn_specs: list[dict[str, Any] | None]
+    context: str | None
+
+
+def prepare_run(
     db: Session,
     model_id: str,
     condition: str,
@@ -84,29 +108,27 @@ def run_conversation(
     system_prompt_override: str | None = None,
     intent_id_override: str | None = None,
     max_tokens: int | None = None,
-) -> ConversationRun:
-    if not mock_allowed():
-        raise MockNotAllowedError(
-            f"This backend only has a mock generator (no model is called). "
-            f"Set {ALLOW_MOCK_ENV}=1 to run it anyway; runs will be recorded as model '{MOCK_MODEL_ID}'."
-        )
-
+    client_factory: Callable[[], Any] | None = None,
+) -> PreparedRun:
+    """Validate the request and record a pending run. Raises before anything is stored."""
+    max_tokens = max_tokens or DEFAULT_MAX_TOKENS
+    generator = _make_generator(model_id, condition, budget, temperature, max_tokens, client_factory)
     intent = _select_intent(intent_name) if intent_name else {}
     system_prompt = system_prompt_override or load_prompt_template(condition, token_budget=budget)
-    if turns_override is not None:
-        turns = turns_override[:max_turns]
-    else:
-        turns = build_turns(intent)[:max_turns]
+    turns = (turns_override if turns_override is not None else build_turns(intent))[:max_turns]
+    # Per-turn specs only apply when the turns come from the intent itself.
+    turn_specs = build_turn_specs(intent) if intent and turns_override is None else []
 
+    is_mock = generator.backend == MOCK_BACKEND
     run = ConversationRun(
         condition=condition,
-        model=MOCK_MODEL_ID,
+        model=generator.model_id,
         status=RunStatus.PENDING,
         intent_id=intent_id_override or intent_name,
         system_prompt=system_prompt,
         parameters={
-            "backend": MOCK_BACKEND,
-            "length_unit": MOCK_LENGTH_UNIT,
+            "backend": generator.backend,
+            "length_unit": MOCK_LENGTH_UNIT if is_mock else "provider_tokens",
             "requested_model_id": model_id,
             "temperature": temperature,
             "token_budget": budget,
@@ -118,9 +140,44 @@ def run_conversation(
     db.add(run)
     db.commit()
     db.refresh(run)
+    return PreparedRun(
+        run_id=run.id,
+        generator=generator,
+        condition=condition,
+        system_prompt=system_prompt,
+        turns=turns,
+        turn_specs=turn_specs,
+        context=intent.get("context") if isinstance(intent, dict) else None,
+    )
 
+
+def run_conversation(db: Session, **kwargs) -> ConversationRun:
+    """Prepare and execute a run in one call (used by tests and scripts)."""
+    return execute_run(db, prepare_run(db, **kwargs))
+
+
+def execute_run(db: Session, prepared: PreparedRun) -> ConversationRun:
+    run = db.query(ConversationRun).filter(ConversationRun.id == prepared.run_id).one()
     run.status = RunStatus.RUNNING
     db.commit()
+    try:
+        return _execute(db, run, prepared)
+    except Exception as exc:  # noqa: BLE001 - any failure must end the run as failed, not stuck running
+        db.rollback()
+        run = db.query(ConversationRun).filter(ConversationRun.id == prepared.run_id).one()
+        run.status = RunStatus.FAILED
+        run.error_message = f"{type(exc).__name__}: {exc}"
+        run.timestamp = datetime.utcnow()
+        db.commit()
+        db.refresh(run)
+        return run
+
+
+def _execute(db: Session, run: ConversationRun, prepared: PreparedRun) -> ConversationRun:
+    condition = prepared.condition
+    turns = prepared.turns
+    turn_specs = prepared.turn_specs
+    context = prepared.context
 
     output_metrics: list[TurnMetrics] = []
     total_cost = 0.0
@@ -129,40 +186,47 @@ def run_conversation(
     instruction_results = []
     unsupported_claim_results = []
     refusal_keyword_results = []
-    # Per-turn specs only apply when the turns come from the intent itself.
-    turn_specs = build_turn_specs(intent) if intent and turns_override is None else []
-    context = intent.get("context") if isinstance(intent, dict) else None
+    stop_reasons: list[str | None] = []
+    thinking_used = False
+    history: list[dict[str, Any]] = []
 
     for index, user_text in enumerate(turns):
-        assistant_text, fallback_used = _mock_generate_response(system_prompt, user_text, condition, budget)
-        input_tokens = _word_count(user_text)
-        output_tokens = _word_count(assistant_text)
-        latency_ms = 0
-        cost_usd = 0.0
+        result = prepared.generator.generate(prepared.system_prompt, history, user_text)
+        history.append({"role": "user", "content": user_text})
+        history.append({"role": "assistant", "content": result.history_content})
+        assistant_text = result.text
 
-        turn = ConversationTurn(
+        db.add(ConversationTurn(
             run_id=run.id,
             turn_index=index,
             user_text=user_text,
             assistant_text=assistant_text,
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-            latency_ms=latency_ms,
-            cost_usd=cost_usd,
-            fallback_used=fallback_used,
-        )
-        db.add(turn)
-        if fallback_used:
+            input_tokens=result.input_tokens,
+            output_tokens=result.output_tokens,
+            latency_ms=result.latency_ms,
+            cost_usd=result.cost_usd,
+            fallback_used=result.fallback_used,
+        ))
+        run.completed_count = index + 1
+        db.commit()
+
+        if result.fallback_used:
             fallback_count += 1
-        output_metrics.append(TurnMetrics(turn_index=index, output_tokens=output_tokens))
-        total_cost += cost_usd
-        total_latency += latency_ms
+        stop_reasons.append(result.stop_reason)
+        thinking_used = thinking_used or result.thinking_used
+        output_metrics.append(TurnMetrics(turn_index=index, output_tokens=result.output_tokens))
+        total_cost += result.cost_usd
+        total_latency += result.latency_ms
 
         turn_spec = turn_specs[index] if index < len(turn_specs) else None
         if turn_spec:
             instruction_results.append(evaluate_instruction_adherence(assistant_text, turn_spec))
         unsupported_claim_results.append(evaluate_unsupported_claim_proxy(assistant_text, context))
         refusal_keyword_results.append(evaluate_refusal_keyword_proxy(assistant_text))
+
+    if thinking_used:
+        # Reasoning tokens are inside output_tokens; never pool these with visible-only counts.
+        run.parameters = {**run.parameters, "length_unit": "provider_tokens_incl_thinking"}
 
     metrics = compute_verbosity_metrics(output_metrics)
 
@@ -190,6 +254,9 @@ def run_conversation(
                 "growth_ratio": metrics.growth_ratio,
             },
             "fallback_rate": fallback_rate,
+            "turn_stop_reasons": stop_reasons,
+            "truncated_turns": [i for i, reason in enumerate(stop_reasons) if reason == "max_tokens"],
+            "thinking_used": thinking_used,
             "thresholds": DEFAULT_THRESHOLDS,
             "checks": checks,
         },
@@ -248,7 +315,6 @@ def run_conversation(
     run.status = RunStatus.COMPLETED
     run.total_cost_usd = total_cost
     run.total_duration_ms = total_latency
-    run.completed_count = len(turns)
     run.timestamp = datetime.utcnow()
     db.commit()
     db.refresh(run)

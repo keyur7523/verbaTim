@@ -14,6 +14,8 @@ from urllib.parse import urljoin
 
 import yaml
 
+from verbatim.models import MODEL_CATALOG
+
 
 INTENTS_PATH = Path(__file__).resolve().parents[1] / "datasets" / "intents.yaml"
 PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts" / "conditions"
@@ -40,17 +42,7 @@ REQUIRED_RUN_FIELDS = (
     "status",
     "error",
 )
-ALLOWED_MODEL_IDS = {
-    "claude-opus-4-5-20251101",
-    "claude-haiku-4-5-20251001",
-    "claude-sonnet-4-5-20250929",
-    "claude-opus-4-1-20250805",
-    "claude-opus-4-20250514",
-    "claude-sonnet-4-20250514",
-    "claude-3-7-sonnet-20250219",
-    "claude-3-5-haiku-20241022",
-    "claude-3-haiku-20240307",
-}
+ALLOWED_MODEL_IDS = {*MODEL_CATALOG, MOCK_MODEL_ID}
 
 
 def load_intents(path: Path = INTENTS_PATH) -> dict:
@@ -207,8 +199,6 @@ def build_run_metadata(run: dict, requested: dict[str, Any]) -> dict[str, Any]:
     """
     run_parameters = run.get("parameters") or {}
     backend = run.get("backend") or run_parameters.get("backend") or requested["backend"]
-    if backend != requested["backend"]:
-        print(f"warning: server reported backend '{backend}', expected '{requested['backend']}'")
     return {
         "artifact_schema_version": ARTIFACT_SCHEMA_VERSION,
         "run_id": str(run.get("run_id") or run.get("id") or requested["run_id"]),
@@ -285,15 +275,25 @@ def write_artifacts(run: dict, output_dir: Path, metadata: dict[str, Any]) -> No
     (output_dir / "aggregate_metrics.json").write_text(json.dumps(aggregate_metrics, indent=2), encoding="utf-8")
 
 
+def parse_temperatures(value: str) -> list[float | None]:
+    if value.strip().lower() in ("", "none"):
+        return [None]
+    return [float(val) for val in value.split(",") if val.strip()]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run Verbatim multi-turn experiments.")
     parser.add_argument("--base-url", default="http://localhost:8000", help="Probekit API base URL")
     parser.add_argument("--model-id", default="claude-sonnet-4-20250514", help="Model identifier")
-    parser.add_argument("--temperatures", default="0.2,0.5", help="Comma-separated temperatures")
+    parser.add_argument(
+        "--temperatures",
+        default="0.2,0.5",
+        help="Comma-separated temperatures, or 'none' to send no temperature (required for models that reject it)",
+    )
     parser.add_argument("--budgets", default="80,120,160", help="Comma-separated token budgets")
     parser.add_argument("--conditions", default="baseline,naive,budgeted,verbatim", help="Comma-separated conditions")
     parser.add_argument("--intents", default="", help="Comma-separated intent ids (default: all)")
-    parser.add_argument("--max-tokens", type=int, default=512, help="Max tokens per response")
+    parser.add_argument("--max-tokens", type=int, default=4096, help="Max tokens per response")
     parser.add_argument("--output-dir", default="artifacts", help="Directory for run artifacts")
     parser.add_argument("--timeout-s", type=int, default=600, help="Timeout per run")
     parser.add_argument("--poll-interval-s", type=float, default=2.0, help="Polling interval")
@@ -331,7 +331,7 @@ def main() -> int:
     if selected_intents:
         intents = [i for i in intents if i.get("id") in selected_intents]
 
-    temperatures = [float(val) for val in args.temperatures.split(",") if val.strip()]
+    temperatures = parse_temperatures(args.temperatures)
     budgets = [int(val) for val in args.budgets.split(",") if val.strip()]
     conditions = [val.strip() for val in args.conditions.split(",") if val.strip()]
 
