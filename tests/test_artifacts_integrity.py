@@ -2,6 +2,7 @@ from pathlib import Path
 import csv
 import json
 
+from verbatim.analysis.contamination import run_dir_mock_reasons
 from verbatim.experiments.run_conversations import REQUIRED_RUN_FIELDS
 
 
@@ -38,6 +39,13 @@ def test_committed_artifacts_are_real_completed_runs():
         payload = json.loads(path.read_text(encoding="utf-8"))
         assert payload.get("status") == "completed", path
         assert payload.get("model") not in (None, "", "mock-echo"), path
+        assert payload.get("backend") != "mock", path
+
+
+def test_committed_transcripts_do_not_look_like_mock_output():
+    run_dirs = [path.parent for path in Path("artifacts").glob("*/aggregate_metrics.json")]
+    flagged = {run_dir.name: run_dir_mock_reasons(run_dir)[:3] for run_dir in run_dirs}
+    assert not {name: reasons for name, reasons in flagged.items() if reasons}
 
 
 # Artifacts written before schema version 2 predate backend/temperature/error fields.
