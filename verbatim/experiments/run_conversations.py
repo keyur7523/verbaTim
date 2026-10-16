@@ -23,6 +23,22 @@ DEFAULT_THRESHOLDS = {
     "max_stddev_ratio": 0.35,
     "max_fallback_rate": 0.15,
 }
+ARTIFACT_SCHEMA_VERSION = 2
+MOCK_BACKEND = "mock"
+MOCK_MODEL_ID = "mock-echo"
+REQUIRED_RUN_FIELDS = (
+    "run_id",
+    "model",
+    "backend",
+    "intent_id",
+    "condition",
+    "temperature",
+    "token_budget",
+    "max_tokens",
+    "timestamp",
+    "status",
+    "error",
+)
 ALLOWED_MODEL_IDS = {
     "claude-opus-4-5-20251101",
     "claude-haiku-4-5-20251001",
@@ -162,7 +178,50 @@ def poll_run(
     raise TimeoutError(f"Run {run_id} did not complete within {timeout_s}s")
 
 
-def write_artifacts(run: dict, output_dir: Path) -> None:
+class MockRunError(RuntimeError):
+    pass
+
+
+def _response_model_id(run: dict) -> str | None:
+    model = run.get("model_id") or run.get("model")
+    if isinstance(model, dict):
+        model = model.get("model_id")
+    return model or None
+
+
+def build_run_metadata(run: dict, requested: dict[str, Any]) -> dict[str, Any]:
+    """Merge what the runner requested with what the server reports.
+
+    The server's backend and model win when present: a mock backend reports
+    backend "mock" and model "mock-echo" regardless of the requested model.
+    Both response shapes are accepted (local backend: run_id/model_id/created_at;
+    ProbeKit API: id/model/timestamp).
+    """
+    run_parameters = run.get("parameters") or {}
+    backend = run.get("backend") or run_parameters.get("backend") or requested["backend"]
+    if backend != requested["backend"]:
+        print(f"warning: server reported backend '{backend}', expected '{requested['backend']}'")
+    return {
+        "artifact_schema_version": ARTIFACT_SCHEMA_VERSION,
+        "run_id": str(run.get("run_id") or run.get("id") or requested["run_id"]),
+        "model": _response_model_id(run) or requested["model"],
+        "backend": backend,
+        "intent_id": run.get("intent_id") or requested["intent_id"],
+        "condition": run.get("condition") or requested["condition"],
+        "temperature": requested["temperature"],
+        "token_budget": requested["token_budget"],
+        "max_tokens": requested["max_tokens"],
+        "timestamp": run.get("timestamp") or run.get("created_at") or requested["timestamp"],
+        "status": run.get("status"),
+        "error": run.get("error") or run.get("error_message"),
+    }
+
+
+def is_mock_run(metadata: dict[str, Any]) -> bool:
+    return metadata.get("backend") == MOCK_BACKEND or metadata.get("model") == MOCK_MODEL_ID
+
+
+def write_artifacts(run: dict, output_dir: Path, metadata: dict[str, Any]) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     turns = sorted(run.get("turns", []), key=lambda item: item.get("turn_index", 0))
     evaluator_results = run.get("evaluator_results", [])
@@ -193,12 +252,7 @@ def write_artifacts(run: dict, output_dir: Path) -> None:
     )
 
     aggregate_metrics = {
-        "run_id": run.get("id"),
-        "condition": run.get("condition"),
-        "model": run.get("model"),
-        "intent_id": run.get("intent_id"),
-        "timestamp": run.get("timestamp"),
-        "status": run.get("status"),
+        **metadata,
         "metrics": verbosity_eval.get("details") if verbosity_eval else {},
         "passed": verbosity_eval.get("passed") if verbosity_eval else None,
         "parameters": run.get("parameters"),
@@ -226,6 +280,16 @@ def main() -> int:
     parser.add_argument("--request-retries", type=int, default=2, help="HTTP request retries")
     parser.add_argument("--insecure", action="store_true", help="Disable TLS certificate verification")
     parser.add_argument("--ca-bundle", default="", help="Path to custom CA bundle for TLS verification")
+    parser.add_argument(
+        "--backend",
+        default="probekit-api",
+        help="Backend label recorded when the server does not report one",
+    )
+    parser.add_argument(
+        "--allow-mock",
+        action="store_true",
+        help="Write artifacts for mock-backend runs instead of failing",
+    )
     args = parser.parse_args()
 
     if args.model_id not in ALLOWED_MODEL_IDS:
@@ -295,8 +359,25 @@ def main() -> int:
                         request_retries=args.request_retries,
                     )
 
+                    metadata = build_run_metadata(run, {
+                        "run_id": run_id,
+                        "model": args.model_id,
+                        "backend": args.backend,
+                        "intent_id": intent_id,
+                        "condition": condition,
+                        "temperature": temperature,
+                        "token_budget": budget,
+                        "max_tokens": args.max_tokens,
+                        "timestamp": parameters["created_at"],
+                    })
+                    if is_mock_run(metadata) and not args.allow_mock:
+                        raise MockRunError(
+                            f"Run {run_id} came from a mock backend (model '{metadata['model']}'). "
+                            "Point --base-url at a real model API, or pass --allow-mock to keep mock runs."
+                        )
+
                     artifact_dir = output_root / str(run_id)
-                    write_artifacts(run, artifact_dir)
+                    write_artifacts(run, artifact_dir, metadata)
                     print(f"Wrote artifacts for {run_id} -> {artifact_dir}")
 
     return 0

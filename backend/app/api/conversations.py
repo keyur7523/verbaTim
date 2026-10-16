@@ -15,7 +15,7 @@ from app.schemas.conversation import (
     CompareResponse,
     EvaluatorResultResponse,
 )
-from app.services.conversation_service import run_conversation
+from app.services.conversation_service import MockNotAllowedError, run_conversation
 
 router = APIRouter()
 
@@ -51,6 +51,8 @@ def start_run(request: ConversationRunRequest, db: Session = Depends(get_db)):
     parameters = request.parameters or {}
     if not temperatures and "temperature" in parameters:
         temperatures = [parameters.get("temperature")]
+    if not temperatures and isinstance(request.model, dict) and "temperature" in request.model:
+        temperatures = [request.model.get("temperature")]
     if not budgets and "token_budget" in parameters:
         budgets = [parameters.get("token_budget")]
     if not temperatures:
@@ -59,8 +61,10 @@ def start_run(request: ConversationRunRequest, db: Session = Depends(get_db)):
         budgets = [None]
 
     model_id = request.model_id
-    if not model_id and request.model and isinstance(request.model, dict):
-        model_id = request.model.get("model_id")
+    max_tokens = parameters.get("max_tokens")
+    if request.model and isinstance(request.model, dict):
+        model_id = model_id or request.model.get("model_id")
+        max_tokens = request.model.get("max_tokens", max_tokens)
     if not model_id:
         raise HTTPException(status_code=422, detail="model_id is required")
 
@@ -76,18 +80,22 @@ def start_run(request: ConversationRunRequest, db: Session = Depends(get_db)):
     if not intent_name and turns_override is None:
         raise HTTPException(status_code=422, detail="intent_name is required when turns are not provided")
 
-    run = run_conversation(
-        db=db,
-        model_id=model_id,
-        condition=condition,
-        intent_name=intent_name or "",
-        temperature=temperatures[0],
-        budget=budgets[0],
-        max_turns=request.max_turns,
-        turns_override=turns_override,
-        system_prompt_override=system_prompt_override,
-        intent_id_override=request.intent_id or intent_name,
-    )
+    try:
+        run = run_conversation(
+            db=db,
+            model_id=model_id,
+            condition=condition,
+            intent_name=intent_name or "",
+            temperature=temperatures[0],
+            budget=budgets[0],
+            max_turns=request.max_turns,
+            turns_override=turns_override,
+            system_prompt_override=system_prompt_override,
+            intent_id_override=request.intent_id or intent_name,
+            max_tokens=max_tokens,
+        )
+    except MockNotAllowedError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
     return ConversationRunResponse(run_id=str(run.id), status=run.status.value)
 
@@ -229,10 +237,15 @@ def get_run(run_id: str, db: Session = Depends(get_db)):
             reasoning=result.reasoning,
         ))
 
+    parameters = run.parameters or {}
     return ConversationDetailResponse(
         run_id=str(run.id),
         condition=run.condition,
         model_id=run.model,
+        backend=parameters.get("backend"),
+        intent_id=run.intent_id,
+        parameters=parameters,
+        error=run.error_message,
         status=run.status.value,
         metrics=metrics,
         turns=turn_responses,

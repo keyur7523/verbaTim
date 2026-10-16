@@ -1,7 +1,7 @@
 """Summarize Verbatim run metrics by (model, condition).
 
 Only completed, evaluated, real-model runs are aggregated by default. Failed
-runs, mock-backend runs (model null or "mock-echo"), and runs without a
+runs, mock-backend runs (model null or "mock-echo", or backend "mock"), and runs without a
 verbosity evaluation are excluded and counted by reason.
 """
 from __future__ import annotations
@@ -87,7 +87,7 @@ def exclusion_reason(payload: dict[str, Any], include_mock: bool = False) -> str
     """Return why a run must be excluded from aggregation, or None to keep it."""
     if payload.get("status") != "completed":
         return "failed"
-    if not include_mock and _model_id(payload) in MOCK_MODELS:
+    if not include_mock and (_model_id(payload) in MOCK_MODELS or payload.get("backend") == "mock"):
         return "mock"
     if payload.get("passed") is None or not any(
         isinstance(v, (int, float)) for v in _extract_metrics(payload).values()

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from datetime import datetime
 from typing import Any
 
@@ -17,6 +18,21 @@ from verbatim.experiments.run_conversations import (
     load_prompt_template,
 )
 
+# This backend never calls a model. Its only generator is a mock that echoes
+# the prompt, so every run it produces is stamped as mock and requires an
+# explicit opt-in.
+MOCK_BACKEND = "mock"
+MOCK_MODEL_ID = "mock-echo"
+ALLOW_MOCK_ENV = "VERBATIM_ALLOW_MOCK"
+
+
+class MockNotAllowedError(RuntimeError):
+    pass
+
+
+def mock_allowed() -> bool:
+    return os.getenv(ALLOW_MOCK_ENV) == "1"
+
 
 def _select_intent(intent_name: str) -> dict[str, Any]:
     intents = load_intents().get("intents", [])
@@ -26,7 +42,7 @@ def _select_intent(intent_name: str) -> dict[str, Any]:
     raise ValueError(f"Intent not found: {intent_name}")
 
 
-def _generate_response(
+def _mock_generate_response(
     system_prompt: str,
     user_text: str,
     condition: str,
@@ -64,7 +80,14 @@ def run_conversation(
     turns_override: list[str] | None = None,
     system_prompt_override: str | None = None,
     intent_id_override: str | None = None,
+    max_tokens: int | None = None,
 ) -> ConversationRun:
+    if not mock_allowed():
+        raise MockNotAllowedError(
+            f"This backend only has a mock generator (no model is called). "
+            f"Set {ALLOW_MOCK_ENV}=1 to run it anyway; runs will be recorded as model '{MOCK_MODEL_ID}'."
+        )
+
     intent = _select_intent(intent_name) if intent_name else {}
     system_prompt = system_prompt_override or load_prompt_template(condition, token_budget=budget)
     if turns_override is not None:
@@ -74,13 +97,16 @@ def run_conversation(
 
     run = ConversationRun(
         condition=condition,
-        model=model_id,
+        model=MOCK_MODEL_ID,
         status=RunStatus.PENDING,
         intent_id=intent_id_override or intent_name,
         system_prompt=system_prompt,
         parameters={
+            "backend": MOCK_BACKEND,
+            "requested_model_id": model_id,
             "temperature": temperature,
             "token_budget": budget,
+            "max_tokens": max_tokens,
             "max_turns": max_turns,
         },
         turn_count=len(turns),
@@ -103,7 +129,7 @@ def run_conversation(
     context = intent.get("context") if isinstance(intent, dict) else None
 
     for index, user_text in enumerate(turns):
-        assistant_text, fallback_used = _generate_response(system_prompt, user_text, condition, budget)
+        assistant_text, fallback_used = _mock_generate_response(system_prompt, user_text, condition, budget)
         input_tokens = _token_count(user_text)
         output_tokens = _token_count(assistant_text)
         latency_ms = 0
