@@ -1,8 +1,9 @@
 """Summarize Verbatim run metrics by (model, condition).
 
 Only completed, evaluated, real-model runs are aggregated by default. Failed
-runs, mock-backend runs (model null or "mock-echo", or backend "mock"), and runs without a
-verbosity evaluation are excluded and counted by reason.
+runs, mock-backend runs (model null or "mock-echo", or backend "mock"), runs whose
+transcript looks like mock output, and runs without a verbosity evaluation are
+excluded and counted by reason.
 """
 from __future__ import annotations
 
@@ -12,6 +13,8 @@ import math
 from collections import Counter
 from pathlib import Path
 from typing import Any
+
+from verbatim.analysis.contamination import run_dir_mock_reasons
 
 
 MOCK_MODELS = {None, "", "mock-echo"}
@@ -119,6 +122,8 @@ def summarize(artifacts_dir: Path, include_mock: bool = False) -> tuple[list[dic
         payload = _load_json(metrics_path)
 
         reason = exclusion_reason(payload, include_mock=include_mock)
+        if not reason and not include_mock and run_dir_mock_reasons(run_dir):
+            reason = "mock_content"
         if reason:
             excluded[reason] += 1
             continue
