@@ -90,17 +90,21 @@ drift slopes therefore mostly reflect the opening answer's length. Over turns 1�
 drift upward in every condition (+1.5 to +2.9 tokens per turn; last-3/first-3 growth 1.25–1.53×).
 With 22 unbalanced runs this is a hint worth testing in the rerun, not a finding.
 
-### Analysis plan for the rerun (proposed, not yet confirmed)
-To be fixed before the rerun's data is looked at:
+### Analysis plan for the rerun (confirmed 2026-10-16, before the rerun started)
+Fixed before any rerun data existed. Only the 5 pilot runs (`artifacts_pilot/`, used to check cost and
+truncation) had been seen; they are excluded from the analysis.
+
+Design:
+- Model `claude-sonnet-4-6`, temperature 0.2, `max_tokens` 4096, token budget 120 (budgeted condition only).
+- All 5 intents × 4 conditions × 10 repeats = 200 runs, written to `artifacts_rerun/`. Each repeat covers every
+  combination before the next starts; spending is capped at $25.
+
+Analysis:
 - Primary comparison: verbatim vs baseline on ratio drift (% per turn) over turns 1–11, with a 95% CI.
 - Secondary: length ratio vs baseline over turns 1–11, turn 0 ratio, and follow-up drift slope per condition.
-- Pass/fail thresholds: currently the existing values (drift slope ≤ 3.0 tokens/turn, growth ≤ 1.2×,
-  stddev ≤ 0.35 × mean, fallback rate ≤ 0.15) applied to turns 1–11. These were not chosen with this
-  analysis in mind; confirm or replace them before running.
-
-### Deltas (baseline → verbatim)
-Withdrawn. With n = 2 for verbatim, no delta is reported. Per-model deltas with sample
-sizes are written to `artifacts/summary_deltas.json` for reference only.
+- Pass/fail thresholds, applied to turns 1–11: drift slope ≤ 3.0 tokens/turn, growth ≤ 1.2×,
+  stddev ≤ 0.35 × mean, fallback rate ≤ 0.15.
+- Failed, mock, and unevaluated runs are excluded and reported with counts. No other runs are dropped.
 
 ## 8) Tradeoffs and Failure Cases
 Observed or expected tradeoffs:

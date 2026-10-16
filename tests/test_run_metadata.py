@@ -81,3 +81,24 @@ def test_length_unit_is_words_for_mock_and_provider_tokens_otherwise():
 def test_server_reported_length_unit_wins():
     run = {**PROBEKIT_RUN, "parameters": {"length_unit": "words"}}
     assert build_run_metadata(run, REQUESTED)["length_unit"] == "words"
+
+
+def test_run_plan_repeats_are_the_outer_loop():
+    from verbatim.experiments.run_conversations import build_run_plan
+
+    intents = [{"id": "a"}, {"id": "b"}]
+    plan = build_run_plan(intents, ["baseline", "budgeted"], [80, 120], [0.2], repeats=2)
+    # Per repeat: 2 intents x (baseline + budgeted at 2 budgets) = 6 runs.
+    assert len(plan) == 12
+    assert [item["repeat"] for item in plan] == [1] * 6 + [2] * 6
+    first_pass = [(item["intent"]["id"], item["condition"], item["budget"]) for item in plan[:6]]
+    assert first_pass == [
+        ("a", "baseline", None), ("a", "budgeted", 80), ("a", "budgeted", 120),
+        ("b", "baseline", None), ("b", "budgeted", 80), ("b", "budgeted", 120),
+    ]
+
+
+def test_run_cost_sums_turn_costs():
+    from verbatim.experiments.run_conversations import run_cost_usd
+
+    assert run_cost_usd({"turns": [{"cost_usd": 0.01}, {"cost_usd": None}, {"cost_usd": 0.02}]}) == 0.03

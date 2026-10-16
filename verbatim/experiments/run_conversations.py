@@ -275,6 +275,39 @@ def write_artifacts(run: dict, output_dir: Path, metadata: dict[str, Any]) -> No
     (output_dir / "aggregate_metrics.json").write_text(json.dumps(aggregate_metrics, indent=2), encoding="utf-8")
 
 
+def build_run_plan(
+    intents: list[dict[str, Any]],
+    conditions: list[str],
+    budgets: list[int],
+    temperatures: list[float | None],
+    repeats: int,
+) -> list[dict[str, Any]]:
+    """Every (intent, condition, budget, temperature) combination, once per repeat.
+
+    The repeat is the outer loop, so each pass covers every combination before
+    the next starts: if the run stops early or the API drifts over time, the
+    conditions stay balanced.
+    """
+    plan = []
+    for repeat in range(1, repeats + 1):
+        for intent in intents:
+            for condition in conditions:
+                for budget in (budgets if condition == "budgeted" else [None]):
+                    for temperature in temperatures:
+                        plan.append({
+                            "repeat": repeat,
+                            "intent": intent,
+                            "condition": condition,
+                            "budget": budget,
+                            "temperature": temperature,
+                        })
+    return plan
+
+
+def run_cost_usd(run: dict) -> float:
+    return sum(t.get("cost_usd") or 0.0 for t in run.get("turns", []))
+
+
 def parse_temperatures(value: str) -> list[float | None]:
     if value.strip().lower() in ("", "none"):
         return [None]
@@ -305,6 +338,13 @@ def main() -> int:
         "--backend",
         default="probekit-api",
         help="Backend label recorded when the server does not report one",
+    )
+    parser.add_argument("--repeats", type=int, default=1, help="Runs per combination")
+    parser.add_argument(
+        "--max-cost-usd",
+        type=float,
+        default=None,
+        help="Stop before starting a run once total spend reaches this amount",
     )
     parser.add_argument(
         "--allow-mock",
@@ -338,68 +378,74 @@ def main() -> int:
     output_root = Path(args.output_dir)
     output_root.mkdir(parents=True, exist_ok=True)
 
-    for intent in intents:
+    plan = build_run_plan(intents, conditions, budgets, temperatures, args.repeats)
+    total_cost = 0.0
+    for position, item in enumerate(plan, start=1):
+        if args.max_cost_usd is not None and total_cost >= args.max_cost_usd:
+            print(f"Stopping: spent ${total_cost:.4f}, cap is ${args.max_cost_usd:.2f}. "
+                  f"{len(plan) - position + 1} of {len(plan)} runs not started.", flush=True)
+            return 1
+        intent, condition, budget, temperature = item["intent"], item["condition"], item["budget"], item["temperature"]
         intent_id = intent.get("id")
-        turns = build_turns(intent)
+        system_prompt = load_prompt_template(condition, token_budget=budget)
+        parameters = {
+            "temperature": temperature,
+            "max_tokens": args.max_tokens,
+            "token_budget": budget,
+            "thresholds": DEFAULT_THRESHOLDS,
+            "created_at": datetime.utcnow().isoformat() + "Z",
+        }
 
-        for condition in conditions:
-            condition_budgets = budgets if condition == "budgeted" else [None]
-            for budget in condition_budgets:
-                system_prompt = load_prompt_template(condition, token_budget=budget)
-                for temperature in temperatures:
-                    parameters = {
-                        "temperature": temperature,
-                        "max_tokens": args.max_tokens,
-                        "token_budget": budget,
-                        "thresholds": DEFAULT_THRESHOLDS,
-                        "created_at": datetime.utcnow().isoformat() + "Z",
-                    }
+        run_id = start_conversation_run(
+            base_url=args.base_url,
+            condition=condition,
+            model_id=args.model_id,
+            temperature=temperature,
+            max_tokens=args.max_tokens,
+            turns=build_turns(intent),
+            system_prompt=system_prompt,
+            intent_id=intent_id,
+            parameters=parameters,
+            ssl_context=ssl_context,
+            request_timeout_s=args.request_timeout_s,
+            request_retries=args.request_retries,
+        )
 
-                    run_id = start_conversation_run(
-                        base_url=args.base_url,
-                        condition=condition,
-                        model_id=args.model_id,
-                        temperature=temperature,
-                        max_tokens=args.max_tokens,
-                        turns=turns,
-                        system_prompt=system_prompt,
-                        intent_id=intent_id,
-                        parameters=parameters,
-                        ssl_context=ssl_context,
-                        request_timeout_s=args.request_timeout_s,
-                        request_retries=args.request_retries,
-                    )
+        run = poll_run(
+            base_url=args.base_url,
+            run_id=run_id,
+            timeout_s=args.timeout_s,
+            poll_interval_s=args.poll_interval_s,
+            ssl_context=ssl_context,
+            request_timeout_s=args.request_timeout_s,
+            request_retries=args.request_retries,
+        )
 
-                    run = poll_run(
-                        base_url=args.base_url,
-                        run_id=run_id,
-                        timeout_s=args.timeout_s,
-                        poll_interval_s=args.poll_interval_s,
-                        ssl_context=ssl_context,
-                        request_timeout_s=args.request_timeout_s,
-                        request_retries=args.request_retries,
-                    )
+        metadata = build_run_metadata(run, {
+            "run_id": run_id,
+            "model": args.model_id,
+            "backend": args.backend,
+            "intent_id": intent_id,
+            "condition": condition,
+            "temperature": temperature,
+            "token_budget": budget,
+            "max_tokens": args.max_tokens,
+            "timestamp": parameters["created_at"],
+        })
+        if is_mock_run(metadata) and not args.allow_mock:
+            raise MockRunError(
+                f"Run {run_id} came from a mock backend (model '{metadata['model']}'). "
+                "Point --base-url at a real model API, or pass --allow-mock to keep mock runs."
+            )
 
-                    metadata = build_run_metadata(run, {
-                        "run_id": run_id,
-                        "model": args.model_id,
-                        "backend": args.backend,
-                        "intent_id": intent_id,
-                        "condition": condition,
-                        "temperature": temperature,
-                        "token_budget": budget,
-                        "max_tokens": args.max_tokens,
-                        "timestamp": parameters["created_at"],
-                    })
-                    if is_mock_run(metadata) and not args.allow_mock:
-                        raise MockRunError(
-                            f"Run {run_id} came from a mock backend (model '{metadata['model']}'). "
-                            "Point --base-url at a real model API, or pass --allow-mock to keep mock runs."
-                        )
-
-                    artifact_dir = output_root / str(run_id)
-                    write_artifacts(run, artifact_dir, metadata)
-                    print(f"Wrote artifacts for {run_id} -> {artifact_dir}")
+        artifact_dir = output_root / str(run_id)
+        write_artifacts(run, artifact_dir, metadata)
+        total_cost += run_cost_usd(run)
+        print(
+            f"[{position}/{len(plan)}] repeat {item['repeat']} {intent_id} {condition} -> {metadata['status']} "
+            f"(total ${total_cost:.4f}) {artifact_dir}",
+            flush=True,
+        )
 
     return 0
 
