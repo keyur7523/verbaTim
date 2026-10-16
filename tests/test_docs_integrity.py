@@ -49,3 +49,11 @@ def test_reproducibility_has_required_sections_and_commands():
 
     assert python_lines >= 2
     assert command_like >= 3
+
+
+def test_docs_never_claim_detection_without_proxy():
+    for path in [Path("README.md"), *Path("docs").glob("*.md")]:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            lowered = line.lower()
+            if "hallucination detect" in lowered or "refusal detect" in lowered:
+                assert "proxy" in lowered, (str(path), line)

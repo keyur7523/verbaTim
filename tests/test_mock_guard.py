@@ -97,3 +97,6 @@ def test_service_checks_instruction_specs_per_turn(session_factory, monkeypatch)
     # concept_explanation has 3 checkable turns; the multi-line mock echo fails the one-line recap.
     assert adherence.details["checked_turns"] == 3
     assert adherence.passed is False
+    names = {r.evaluator_name for r in run.evaluator_results}
+    assert {"unsupported_claim_proxy", "refusal_keyword_proxy"} <= names
+    assert not names & {"hallucination_proxy", "refusal_proxy"}

@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 from app.models import ConversationRun, ConversationTurn, ConversationEvaluatorResult, RunStatus
 from verbatim.evaluators.verbosity import TurnMetrics, compute_verbosity_metrics
 from verbatim.evaluators.instruction_adherence import evaluate_instruction_adherence
-from verbatim.evaluators.hallucination_proxy import evaluate_hallucination_proxy
-from verbatim.evaluators.refusal import evaluate_refusal
+from verbatim.evaluators.refusal_keyword_proxy import evaluate_refusal_keyword_proxy
+from verbatim.evaluators.unsupported_claim_proxy import evaluate_unsupported_claim_proxy
 from verbatim.experiments.run_conversations import (
     DEFAULT_THRESHOLDS,
     build_turn_specs,
@@ -124,8 +124,8 @@ def run_conversation(
     total_latency = 0
     fallback_count = 0
     instruction_results = []
-    hallucination_results = []
-    refusal_results = []
+    unsupported_claim_results = []
+    refusal_keyword_results = []
     # Per-turn specs only apply when the turns come from the intent itself.
     turn_specs = build_turn_specs(intent) if intent and turns_override is None else []
     context = intent.get("context") if isinstance(intent, dict) else None
@@ -158,8 +158,8 @@ def run_conversation(
         turn_spec = turn_specs[index] if index < len(turn_specs) else None
         if turn_spec:
             instruction_results.append(evaluate_instruction_adherence(assistant_text, turn_spec))
-        hallucination_results.append(evaluate_hallucination_proxy(assistant_text, context))
-        refusal_results.append(evaluate_refusal(assistant_text))
+        unsupported_claim_results.append(evaluate_unsupported_claim_proxy(assistant_text, context))
+        refusal_keyword_results.append(evaluate_refusal_keyword_proxy(assistant_text))
 
     metrics = compute_verbosity_metrics(output_metrics)
 
@@ -214,28 +214,32 @@ def run_conversation(
         ),
     ))
 
-    hallucination_pass = all(result["passed"] for result in hallucination_results) if hallucination_results else True
+    unsupported_claim_pass = (
+        all(result["passed"] for result in unsupported_claim_results) if unsupported_claim_results else True
+    )
     db.add(ConversationEvaluatorResult(
         run_id=run.id,
-        evaluator_name="hallucination_proxy",
-        passed=hallucination_pass,
-        score=1.0 if hallucination_pass else 0.0,
+        evaluator_name="unsupported_claim_proxy",
+        passed=unsupported_claim_pass,
+        score=1.0 if unsupported_claim_pass else 0.0,
         details={
-            "per_turn": [result["details"] for result in hallucination_results],
+            "per_turn": [result["details"] for result in unsupported_claim_results],
         },
-        reasoning="No hallucination flags" if hallucination_pass else "Hallucination flags detected",
+        reasoning="No unsupported-claim proxy flags" if unsupported_claim_pass else "Unsupported-claim proxy flags",
     ))
 
-    refusal_detected = any(result["refusal_detected"] for result in refusal_results) if refusal_results else False
+    refusal_keyword_flagged = (
+        any(result["flagged"] for result in refusal_keyword_results) if refusal_keyword_results else False
+    )
     db.add(ConversationEvaluatorResult(
         run_id=run.id,
-        evaluator_name="refusal_proxy",
-        passed=not refusal_detected,
-        score=0.0 if refusal_detected else 1.0,
+        evaluator_name="refusal_keyword_proxy",
+        passed=not refusal_keyword_flagged,
+        score=0.0 if refusal_keyword_flagged else 1.0,
         details={
-            "per_turn": [result["details"] for result in refusal_results],
+            "per_turn": [result["details"] for result in refusal_keyword_results],
         },
-        reasoning="No refusals detected" if not refusal_detected else "Refusal detected",
+        reasoning="Refusal keywords matched" if refusal_keyword_flagged else "No refusal keywords matched",
     ))
 
     run.status = RunStatus.COMPLETED

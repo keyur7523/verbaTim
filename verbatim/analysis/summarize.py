@@ -181,11 +181,12 @@ def summarize(artifacts_dir: Path, include_mock: bool = False) -> tuple[list[dic
         for result in _load_evaluator_results(run_dir):
             name = result.get("evaluator_name")
             passed = result.get("passed")
-            if name == "hallucination_proxy":
+            # Older artifacts used "hallucination_proxy" and "refusal_proxy".
+            if name in ("unsupported_claim_proxy", "hallucination_proxy"):
                 row["unsupported_claim_total"] += 1
                 if not passed:
                     row["unsupported_claim_flagged"] += 1
-            elif name == "refusal_proxy":
+            elif name in ("refusal_keyword_proxy", "refusal_proxy"):
                 row["refusal_keyword_total"] += 1
                 if not passed:
                     row["refusal_keyword_flagged"] += 1

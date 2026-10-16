@@ -1,3 +1,11 @@
+"""Unsupported-claim proxy (regex).
+
+With a context: flags numbers and capitalized phrases in the reply that do not
+appear in the context. Without one: flags any number, "studies show",
+"according to", or "[n]" citation marker. It is a regex proxy, not
+hallucination detection: sentence-initial words ("The"), product names and
+correct numbers all get flagged, and fabricated claims in lowercase prose pass.
+"""
 from __future__ import annotations
 
 import re
@@ -23,7 +31,7 @@ def _extract_candidates(text: str) -> list[tuple[str, str]]:
     return candidates
 
 
-def evaluate_hallucination_proxy(assistant_text: str, context: str | None) -> dict[str, Any]:
+def evaluate_unsupported_claim_proxy(assistant_text: str, context: str | None) -> dict[str, Any]:
     flagged_spans: list[str] = []
     reason_codes: list[str] = []
 
