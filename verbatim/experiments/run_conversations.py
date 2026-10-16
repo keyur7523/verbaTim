@@ -30,6 +30,7 @@ REQUIRED_RUN_FIELDS = (
     "run_id",
     "model",
     "backend",
+    "length_unit",
     "intent_id",
     "condition",
     "temperature",
@@ -213,6 +214,7 @@ def build_run_metadata(run: dict, requested: dict[str, Any]) -> dict[str, Any]:
         "run_id": str(run.get("run_id") or run.get("id") or requested["run_id"]),
         "model": _response_model_id(run) or requested["model"],
         "backend": backend,
+        "length_unit": _length_unit(run, backend),
         "intent_id": run.get("intent_id") or requested["intent_id"],
         "condition": run.get("condition") or requested["condition"],
         "temperature": requested["temperature"],
@@ -222,6 +224,18 @@ def build_run_metadata(run: dict, requested: dict[str, Any]) -> dict[str, Any]:
         "status": run.get("status"),
         "error": run.get("error") or run.get("error_message"),
     }
+
+
+def _length_unit(run: dict, backend: str) -> str:
+    """Unit of the per-turn input_tokens/output_tokens counts.
+
+    The mock backend counts words and says so. A real model API reports the
+    provider's token counts.
+    """
+    reported = run.get("length_unit") or (run.get("parameters") or {}).get("length_unit")
+    if reported:
+        return reported
+    return "words" if backend == MOCK_BACKEND else "provider_tokens"
 
 
 def is_mock_run(metadata: dict[str, Any]) -> bool:

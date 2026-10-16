@@ -24,6 +24,8 @@ from verbatim.experiments.run_conversations import (
 # explicit opt-in.
 MOCK_BACKEND = "mock"
 MOCK_MODEL_ID = "mock-echo"
+# The mock has no tokenizer: its input_tokens/output_tokens fields hold word counts.
+MOCK_LENGTH_UNIT = "words"
 ALLOW_MOCK_ENV = "VERBATIM_ALLOW_MOCK"
 
 
@@ -64,7 +66,7 @@ def _mock_generate_response(
     return truncated, True
 
 
-def _token_count(text: str | None) -> int:
+def _word_count(text: str | None) -> int:
     if not text:
         return 0
     return len(text.split())
@@ -104,6 +106,7 @@ def run_conversation(
         system_prompt=system_prompt,
         parameters={
             "backend": MOCK_BACKEND,
+            "length_unit": MOCK_LENGTH_UNIT,
             "requested_model_id": model_id,
             "temperature": temperature,
             "token_budget": budget,
@@ -132,8 +135,8 @@ def run_conversation(
 
     for index, user_text in enumerate(turns):
         assistant_text, fallback_used = _mock_generate_response(system_prompt, user_text, condition, budget)
-        input_tokens = _token_count(user_text)
-        output_tokens = _token_count(assistant_text)
+        input_tokens = _word_count(user_text)
+        output_tokens = _word_count(assistant_text)
         latency_ms = 0
         cost_usd = 0.0
 

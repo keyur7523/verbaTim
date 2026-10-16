@@ -34,6 +34,14 @@ def _model_id(payload: dict[str, Any]) -> str | None:
     return model or None
 
 
+def _length_unit(payload: dict[str, Any]) -> str:
+    """Unit of the per-turn length counts; older artifacts predate the field."""
+    if payload.get("length_unit"):
+        return payload["length_unit"]
+    is_mock = _model_id(payload) in MOCK_MODELS or payload.get("backend") == "mock"
+    return "words" if is_mock else "provider_tokens"
+
+
 def _extract_metrics(payload: dict[str, Any]) -> dict[str, float | None]:
     metrics = payload.get("metrics") or {}
     # Support nested shape: {"metrics": {...}} or flat.
@@ -121,7 +129,7 @@ def _instruction_adherence(run_dir: Path, intent: dict[str, Any] | None) -> dict
 
 
 def summarize(artifacts_dir: Path, include_mock: bool = False) -> tuple[list[dict[str, Any]], Counter]:
-    rows: dict[tuple[str, str], dict[str, Any]] = {}
+    rows: dict[tuple[str, str, str], dict[str, Any]] = {}
     excluded: Counter = Counter()
     intents = {intent.get("id"): intent for intent in load_intents().get("intents", [])}
 
@@ -142,11 +150,14 @@ def summarize(artifacts_dir: Path, include_mock: bool = False) -> tuple[list[dic
 
         model = _model_id(payload) or "mock-echo"
         condition = payload.get("condition", "unknown")
+        length_unit = _length_unit(payload)
+        # Word counts and token counts are never pooled.
         row = rows.setdefault(
-            (model, condition),
+            (model, condition, length_unit),
             {
                 "model": model,
                 "condition": condition,
+                "length_unit": length_unit,
                 "n": 0,
                 "passed": 0,
                 **{key: [] for key in METRIC_KEYS},
@@ -196,6 +207,7 @@ def summarize(artifacts_dir: Path, include_mock: bool = False) -> tuple[list[dic
         out: dict[str, Any] = {
             "model": row["model"],
             "condition": row["condition"],
+            "length_unit": row["length_unit"],
             "n": row["n"],
             "passed": row["passed"],
             "pass_rate": row["passed"] / row["n"],
@@ -219,13 +231,14 @@ def summarize(artifacts_dir: Path, include_mock: bool = False) -> tuple[list[dic
         )
         output.append(out)
 
-    output.sort(key=lambda item: (item["model"], item["condition"]))
+    output.sort(key=lambda item: (item["model"], item["condition"], item["length_unit"]))
     return output, excluded
 
 
 CSV_HEADER = [
     "model",
     "condition",
+    "length_unit",
     "n",
     "passed",
     "pass_rate",
@@ -248,6 +261,7 @@ def _row_cells(row: dict[str, Any]) -> list[str]:
     return [
         row["model"],
         row["condition"],
+        row["length_unit"],
         str(row["n"]),
         str(row["passed"]),
         _format_float(row["pass_rate"]),
@@ -284,10 +298,15 @@ def compute_deltas(rows: list[dict[str, Any]], baseline_condition: str) -> list[
     deltas = []
     for baseline in (r for r in rows if r["condition"] == baseline_condition):
         for row in rows:
-            if row["model"] != baseline["model"] or row["condition"] == baseline_condition:
+            if (
+                row["model"] != baseline["model"]
+                or row["length_unit"] != baseline["length_unit"]
+                or row["condition"] == baseline_condition
+            ):
                 continue
             deltas.append({
                 "model": row["model"],
+                "length_unit": row["length_unit"],
                 "baseline": baseline_condition,
                 "candidate": row["condition"],
                 "n_baseline": baseline["n"],

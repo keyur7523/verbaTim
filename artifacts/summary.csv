@@ -1,5 +1,5 @@
-model,condition,n,passed,pass_rate,mean_tokens,mean_tokens_sd,drift_slope,drift_slope_sd,length_stddev,length_stddev_sd,growth_ratio,growth_ratio_sd,instruction_checked_turns,instruction_turn_pass_rate,unsupported_claim_proxy_rate,refusal_keyword_proxy_rate
-claude-sonnet-4-20250514,baseline,9,0,0.000,77.699,15.069,-13.017,5.986,106.785,37.541,0.279,0.037,27,1.000,n/a,n/a
-claude-sonnet-4-20250514,budgeted,6,0,0.000,52.555,10.216,-1.571,1.282,33.474,11.432,0.706,0.110,18,1.000,n/a,n/a
-claude-sonnet-4-20250514,naive,5,0,0.000,57.750,6.097,-6.959,0.778,60.277,9.906,0.399,0.036,15,1.000,n/a,n/a
-claude-sonnet-4-20250514,verbatim,2,0,0.000,40.334,6.246,-3.227,0.317,34.401,3.145,0.558,0.075,6,1.000,n/a,n/a
+model,condition,length_unit,n,passed,pass_rate,mean_tokens,mean_tokens_sd,drift_slope,drift_slope_sd,length_stddev,length_stddev_sd,growth_ratio,growth_ratio_sd,instruction_checked_turns,instruction_turn_pass_rate,unsupported_claim_proxy_rate,refusal_keyword_proxy_rate
+claude-sonnet-4-20250514,baseline,provider_tokens,9,0,0.000,77.699,15.069,-13.017,5.986,106.785,37.541,0.279,0.037,27,1.000,n/a,n/a
+claude-sonnet-4-20250514,budgeted,provider_tokens,6,0,0.000,52.555,10.216,-1.571,1.282,33.474,11.432,0.706,0.110,18,1.000,n/a,n/a
+claude-sonnet-4-20250514,naive,provider_tokens,5,0,0.000,57.750,6.097,-6.959,0.778,60.277,9.906,0.399,0.036,15,1.000,n/a,n/a
+claude-sonnet-4-20250514,verbatim,provider_tokens,2,0,0.000,40.334,6.246,-3.227,0.317,34.401,3.145,0.558,0.075,6,1.000,n/a,n/a

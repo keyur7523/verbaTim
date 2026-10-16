@@ -21,7 +21,7 @@ These conditions isolate how increasingly structured constraints affect drift wh
 
 ## 4) Metrics and Evaluation
 Core metrics:
-- Mean tokens per turn: average output length per turn; indicates overall verbosity.
+- Mean tokens per turn: average output length per turn, in the provider's token counts; indicates overall verbosity.
 - Drift slope: linear regression slope of output tokens vs turn index; captures trend across turns.
 - Growth ratio: mean output of last 3 turns divided by first 3 turns; detects end-of-conversation inflation.
 - Length stddev: variability in output length across turns; captures instability.

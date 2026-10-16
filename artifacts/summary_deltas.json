@@ -1,6 +1,7 @@
 [
   {
     "model": "claude-sonnet-4-20250514",
+    "length_unit": "provider_tokens",
     "baseline": "baseline",
     "candidate": "budgeted",
     "n_baseline": 9,
@@ -14,6 +15,7 @@
   },
   {
     "model": "claude-sonnet-4-20250514",
+    "length_unit": "provider_tokens",
     "baseline": "baseline",
     "candidate": "naive",
     "n_baseline": 9,
@@ -27,6 +29,7 @@
   },
   {
     "model": "claude-sonnet-4-20250514",
+    "length_unit": "provider_tokens",
     "baseline": "baseline",
     "candidate": "verbatim",
     "n_baseline": 9,

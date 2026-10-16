@@ -69,6 +69,7 @@ def test_service_stamps_mock_model_with_flag(session_factory, monkeypatch):
     assert run.parameters["backend"] == "mock"
     assert run.parameters["requested_model_id"] == "claude-sonnet-4-20250514"
     assert run.parameters["max_tokens"] == 512
+    assert run.parameters["length_unit"] == "words"
 
 
 def test_api_returns_503_without_flag(client, monkeypatch):

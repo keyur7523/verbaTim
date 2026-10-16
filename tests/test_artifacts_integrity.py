@@ -22,6 +22,7 @@ def test_artifacts_exist_if_docs_reference_them():
     assert "condition" in header_lower
     assert "model" in header_lower
     assert "n" in header_lower
+    assert "length_unit" in header_lower
     assert any(name in header_lower for name in ["mean_tokens_per_turn", "mean_tokens", "mean_tokens_turn"])
     assert any(name in header_lower for name in ["drift_slope", "slope"])
     assert any(name in header_lower for name in ["growth_ratio", "growth"])
@@ -64,3 +65,10 @@ def test_committed_artifacts_have_run_metadata():
             if field == "error" or (field == "token_budget" and payload["condition"] != "budgeted"):
                 continue
             assert payload[field] is not None, (path, field)
+
+
+def test_committed_summary_reports_provider_tokens_only():
+    with Path("artifacts/summary.csv").open("r", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    assert rows
+    assert {row["length_unit"] for row in rows} == {"provider_tokens"}

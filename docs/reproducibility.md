@@ -71,15 +71,15 @@ python verbatim/analysis/summarize.py \
 - `transcript.json`: ordered user/assistant turns
 - `turn_metrics.json`: per-turn token and latency metadata
 - `evaluator_results.json`: evaluator outputs per run
-- `aggregate_metrics.json`: rollup metrics for the run, plus run metadata (`artifact_schema_version` 2 and later): `run_id`, `model`, `backend` (`probekit-api` or `mock`), `intent_id`, `condition`, `temperature`, `token_budget`, `max_tokens`, `timestamp`, `status`, `error`
-- `summary.csv`: aggregation per (model, condition) with `n` and standard deviations; failed, mock (model null or `mock-echo`), and unevaluated runs are excluded (pass `--include-mock` to keep mock runs)
+- `aggregate_metrics.json`: rollup metrics for the run, plus run metadata (`artifact_schema_version` 2 and later): `run_id`, `model`, `backend` (`probekit-api` or `mock`), `length_unit` (`provider_tokens` or `words`), `intent_id`, `condition`, `temperature`, `token_budget`, `max_tokens`, `timestamp`, `status`, `error`
+- `summary.csv`: aggregation per (model, condition, length unit) with `n` and standard deviations; word counts and token counts are never pooled; failed, mock (model null or `mock-echo`), and unevaluated runs are excluded (pass `--include-mock` to keep mock runs)
 - `summary.html`: HTML table view
 
 Interpretation notes:
 - Per-run metrics live in `aggregate_metrics.json`.
 - Cross-condition deltas live in `summary_deltas.json`.
 - Evaluator outputs are stored in `evaluator_results.json` if present.
-- Drift slope is computed by the verbosity evaluator from per-turn output_tokens.
+- Drift slope is computed by the verbosity evaluator from per-turn output_tokens. For real runs these are the provider's token counts (the committed runs' counts reproduce their recorded `cost_usd` at $3/$15 per million input/output tokens); for mock runs the same fields hold word counts, labelled `length_unit: words`.
 - Pass rate is derived from the verbosity evaluator passed/failed field.
 
 ## 6) Determinism & Variance

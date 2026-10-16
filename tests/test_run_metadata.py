@@ -71,3 +71,13 @@ def test_written_artifact_has_every_required_field(tmp_path: Path):
         assert field in payload, field
         if field != "error":
             assert payload[field] is not None, field
+
+
+def test_length_unit_is_words_for_mock_and_provider_tokens_otherwise():
+    assert build_run_metadata(LOCAL_BACKEND_RUN, REQUESTED)["length_unit"] == "words"
+    assert build_run_metadata(PROBEKIT_RUN, REQUESTED)["length_unit"] == "provider_tokens"
+
+
+def test_server_reported_length_unit_wins():
+    run = {**PROBEKIT_RUN, "parameters": {"length_unit": "words"}}
+    assert build_run_metadata(run, REQUESTED)["length_unit"] == "words"
