@@ -106,6 +106,10 @@ Analysis:
   stddev ≤ 0.35 × mean, fallback rate ≤ 0.15.
 - Failed, mock, and unevaluated runs are excluded and reported with counts. No other runs are dropped.
 
+### Deltas (baseline → verbatim)
+Withdrawn. With n = 2 for verbatim, no delta is reported. Per-model deltas with sample
+sizes are written to `artifacts/summary_deltas.json` for reference only.
+
 ## 8) Tradeoffs and Failure Cases
 Observed or expected tradeoffs:
 - Over-compression can omit nuance needed for correctness.
